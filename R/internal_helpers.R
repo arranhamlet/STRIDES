@@ -211,10 +211,10 @@ split_and_sum <- function(vec, n_bins) {
 }
 
 
-#' Filter Routine Vaccination Schedule for a Country and Antigen
+#' Filter Routine Vaccination Schedule for a Country and Vaccine
 #'
 #' Filters a WHO vaccination schedule data frame to extract age-specific routine vaccination
-#' rounds for a specific antigen and country.
+#' rounds for a specific vaccine and country.
 #'
 #' @param vaccination_schedule A data frame of WHO vaccination schedules.
 #' @param vaccination_type A character string for matching VACCINE_DESCRIPTION.
@@ -225,19 +225,19 @@ split_and_sum <- function(vec, n_bins) {
 filter_vaccine_schedule <- function(vaccination_schedule, vaccination_type, iso) {
   vaccination_schedule %>%
     dplyr::filter(
-      !is.na(AGEADMINISTERED),
-      grepl(vaccination_type, VACCINE_DESCRIPTION, ignore.case = TRUE),
-      ISO_3_CODE == iso,
-      TARGETPOP_DESCRIPTION != "Travellers",
-      !grepl("ADULTS|CATCHUP_C", TARGETPOP, ignore.case = TRUE),
-      !grepl("contact", AGEADMINISTERED),
-      VACCINECODE != "TD_S"
+      !is.na(age_administered),
+      grepl(vaccination_type, vaccine_description, ignore.case = TRUE),
+      iso3 == iso,
+      target_pop_description != "Travellers",
+      !grepl("ADULTS|CATCHUP_C", target_pop, ignore.case = TRUE),
+      !grepl("contact", age_administered),
+      vaccine_code != "TD_S"
     ) %>%
     dplyr::mutate(age_years = dplyr::case_when(
-      grepl("Y", AGEADMINISTERED) ~ as.numeric(gsub("[^0-9.-]", "", AGEADMINISTERED)),
-      grepl("M", AGEADMINISTERED) ~ as.numeric(gsub("[^0-9.-]", "", AGEADMINISTERED)) / 12,
-      grepl("W", AGEADMINISTERED) ~ as.numeric(gsub("[^0-9.-]", "", AGEADMINISTERED)) / 52,
-      grepl("D", AGEADMINISTERED) ~ as.numeric(gsub("[^0-9.-]", "", AGEADMINISTERED)) / 365,
+      grepl("Y", age_administered) ~ as.numeric(gsub("[^0-9.-]", "", age_administered)),
+      grepl("M", age_administered) ~ as.numeric(gsub("[^0-9.-]", "", age_administered)) / 12,
+      grepl("W", age_administered) ~ as.numeric(gsub("[^0-9.-]", "", age_administered)) / 52,
+      grepl("D", age_administered) ~ as.numeric(gsub("[^0-9.-]", "", age_administered)) / 365,
       TRUE ~ NA_real_
     )) %>%
     dplyr::arrange(age_years)
@@ -257,15 +257,15 @@ filter_vaccine_schedule <- function(vaccination_schedule, vaccination_type, iso)
 #' @keywords internal
 build_routine_vaccination_param <- function(vaccination_data, schedule, ages, years) {
   df <- fill_missing_years_general(vaccination_data, "year", "coverage") %>%
-    dplyr::group_by(antigen, antigen_description, dose_order, year) %>%
+    dplyr::group_by(vaccine, vaccine_description, dose_order, year) %>%
     dplyr::summarise(coverage = max(coverage), .groups = "drop") %>%
     dplyr::filter(coverage > 0)
 
   purrr::map_dfr(seq_len(nrow(df)), function(i) {
     row <- df[i, ]
-    dose <- min(row$dose_order, max(schedule$SCHEDULEROUNDS, na.rm = TRUE))
+    dose <- min(row$dose_order, max(schedule$schedulerounds, na.rm = TRUE))
     timing <- schedule %>%
-      dplyr::filter(SCHEDULEROUNDS == dose) %>%
+      dplyr::filter(schedulerounds == dose) %>%
       dplyr::slice(1) %>%
       dplyr::pull(age_years)
     targets <- if (row$dose_order == 1) 1 else (2 * row$dose_order - 2):(2 * row$dose_order - 1)
@@ -343,3 +343,164 @@ build_sia_vaccination_param <- function(sia_data, ages, years) {
     value = df$coverage
   )
 }
+
+#' Fill Missing Years by Group (Tidyverse)
+#'
+#' For each combination of grouping columns (all columns except year_col and value_col),
+#' this function fills in missing consecutive years, setting the value_col to 0,
+#' and replicates the grouping information. One additional year is added after the last.
+#'
+#' @param df A data frame with at least a year and value column.
+#' @param year_col The name of the year column (as a string).
+#' @param value_col The name of the value column (as a string).
+#'
+#' @return A tidy data frame with missing years filled for each group.
+#'
+#' @examples
+#' df <- tibble::tibble(
+#'   region = c("A", "A", "A", "B", "B"),
+#'   source = c("X", "X", "X", "Y", "Y"),
+#'   year = c(2000, 2005, 2010, 2000, 2010),
+#'   value = c(1, 25, 29, 3, 12)
+#' )
+#' fill_missing_years_by_group(df, year_col = "year", value_col = "value")
+#'
+#' @export
+fill_missing_years_general <- function(df, year_col, value_col) {
+
+  year_sym <- sym(year_col)
+  value_sym <- sym(value_col)
+
+  # Grouping columns are all others
+  group_cols <- setdiff(names(df), c(year_col, value_col))
+
+  df_filled <- df %>%
+    group_by(across(all_of(group_cols))) %>%
+    summarise(
+      min_year = min(.data[[year_col]]),
+      max_year = max(.data[[year_col]]),
+      .groups = "drop"
+    ) %>%
+    rowwise() %>%
+    mutate(data = list(tibble(!!year_sym := seq(min_year, max_year + 1)))) %>%
+    select(-min_year, -max_year) %>%
+    unnest(data) %>%
+    left_join(df, by = c(setNames(group_cols, group_cols), year_col)) %>%
+    mutate(
+      !!value_sym := if_else(is.na(.data[[value_col]]), 0, .data[[value_col]])
+    ) %>%
+    arrange(across(all_of(c(group_cols, year_col))))
+
+  return(df_filled)
+}
+
+#' Combine Routine and SIA Vaccination Coverage Parameters
+#'
+#' Merges routine and SIA (supplementary immunization activity) vaccination parameter data frames
+#' and ensures values are capped at 1 (100% coverage) for each unique parameter combination.
+#'
+#' @param routine_df A data frame of routine vaccination parameters. Must contain columns:
+#'   `dim1`, `dim2`, `dim3`, `dim4`, and `value`.
+#' @param sia_df A data frame of SIA vaccination parameters (optional). If `NULL`, only routine data is used.
+#'
+#' @return A data frame containing combined vaccination parameters with coverage values capped at 1.
+#'   The returned data frame contains columns: `dim1`, `dim2`, `dim3`, `dim4`, and `value`.
+#'
+#' @details
+#' This function is typically used in the pipeline preparing model inputs to ensure
+#' vaccination coverage parameters are bounded and consolidated before being passed
+#' into simulation.
+#'
+#' @examples
+#' # combine_vaccination_params(routine_df, sia_df)
+#'
+#' @keywords internal
+combine_vaccination_params <- function(routine_df, sia_df = NULL) {
+  combined <- dplyr::bind_rows(routine_df, sia_df)
+  combined %>%
+    dplyr::group_by(dim1, dim2, dim3, dim4) %>%
+    dplyr::summarise(value = pmin(sum(value), 1), .groups = "drop")
+}
+
+#' Convert Long-Format Data Frame to Multi-Dimensional Array
+#'
+#' This internal function converts a tidy data frame containing dimension columns and a `value` column
+#' into a numeric array. Each row specifies the value for a particular position in the output array.
+#'
+#' @param df A data frame containing dimension columns named `dim1`, `dim2`, ..., and a `value` column.
+#'
+#' @return A numeric array with shape inferred from the maximum index in each dimension column.
+#'
+#' @keywords internal
+df_to_array <- function(df) {
+  dim_cols <- grep("^dim\\d+$", names(df), value = TRUE)
+  dims <- vapply(dim_cols, function(col) as.integer(max(df[[col]])), integer(1))
+  strides <- c(1L, cumprod(head(dims, -1L)))
+
+  idx_matrix <- as.matrix(df %>% select(all_of(dim_cols)))
+  lin_idx <- rowSums(sweep(idx_matrix - 1L, 2, strides, `*`)) + 1L
+
+  arr <- array(0, dim = dims)
+  arr[lin_idx] <- df$value
+  arr
+}
+
+
+
+#' Generate a Long-Format Data Frame Representing a Multi-Dimensional Array
+#'
+#' This internal helper function creates a tidy data frame representing a multi-dimensional array
+#' up to six dimensions. Each row corresponds to a unique combination of dimension indices.
+#' Optionally, specific values can be overridden using the `updates` argument.
+#'
+#' @param dim1,dim2,dim3,dim4,dim5,dim6 Integers specifying the size of each dimension.
+#'   Only `dim1` is required. Others may be `NULL`.
+#' @param default_value Numeric. Default value to assign to each array element (default is 0).
+#' @param updates Optional `data.frame` with columns `dim1`, `dim2`, ..., and `value` to override specific positions.
+#'
+#' @return A `data.frame` with columns `ID`, `dim1`, ..., and `value`, representing all array coordinates.
+#'
+#' @keywords internal
+generate_array_df <- function(dim1, dim2 = NULL, dim3 = NULL, dim4 = NULL, dim5 = NULL, dim6 = NULL,
+                              default_value = 0, updates = NULL) {
+  dims <- list(dim1, dim2, dim3, dim4, dim5, dim6)
+  dims <- dims[!vapply(dims, is.null, logical(1))]
+  n_dims <- length(dims)
+
+  index_grid <- do.call(expand.grid, lapply(dims, seq_len))
+  names(index_grid) <- paste0("dim", seq_len(n_dims))
+  index_grid$value <- default_value
+
+  if (!is.null(updates) && nrow(updates) > 0) {
+    key_cols <- paste0("dim", seq_len(n_dims))
+
+    # Coerce both updates and grid to integer
+    updates[, (key_cols) := lapply(.SD, as.integer), .SDcols = key_cols]
+    index_grid[key_cols] <- lapply(index_grid[key_cols], as.integer)
+
+    # Ensure all combinations are filled with default unless updated
+    data.table::setDT(index_grid)
+    data.table::setDT(updates)
+
+    full_grid <- merge(index_grid, updates, by = key_cols, all.x = TRUE, suffixes = c("", ".update"))
+    full_grid[, value := fifelse(!is.na(value.update), value.update, default_value)]
+    full_grid[, value.update := NULL]
+
+    index_grid <- full_grid
+  }
+
+cbind(ID = seq_len(nrow(index_grid)), index_grid)
+}
+
+
+#' Convert Long-Format Updates into an Array
+#'
+#' This internal wrapper function generates a tidy grid using `generate_array_df()` and reshapes it into an array
+#' using `df_to_array()`. It simplifies the pipeline for transforming partial long-format input into a structured array.
+#'
+#' @param ... Arguments passed to `generate_array_df()` (including `updates`, `dim1`, `dim2`, etc.).
+#'
+#' @return A multi-dimensional array constructed from the provided dimensions and update values.
+#'
+#' @keywords internal
+array_from_df <- function(...) df_to_array(generate_array_df(...))

@@ -60,9 +60,8 @@ process_demography <- function(
     number_of_vaccines = 0,
     n_risk = 1
 ) {
-  n_vacc <- if (number_of_vaccines == 0) 1 else number_of_vaccines * 2 + 1
 
-  filter_country <- function(dt) dt[iso3 == iso]
+  n_vacc <- if (number_of_vaccines == 0) 1 else number_of_vaccines * 2 + 1
 
   years <- get_years(migration$year, start = year_start, end = year_end)
   time_run_for <- length(years)
@@ -74,12 +73,11 @@ process_demography <- function(
   data.table::setDT(population_all)
   data.table::setDT(population_female)
 
-  print(head(migration))
-  migration <- filter_country(migration)
-  fertility <- filter_country(fertility)
-  mortality <- filter_country(mortality)
-  population_all <- filter_country(population_all)
-  population_female <- filter_country(population_female)
+  migration <- migration %>% subset(iso3 == iso)
+  fertility <- fertility %>% subset(iso3 == iso)
+  mortality <- mortality %>% subset(iso3 == iso)
+  population_all <- population_all %>% subset(iso3 == iso)
+  population_female <- population_female %>% subset(iso3 == iso)
 
   pop_all_raw <- as.matrix(population_all[year %in% years, paste0("x", 0:100), with = FALSE])
   pop_all <- collapse_age_bins(pop_all_raw, n_age)

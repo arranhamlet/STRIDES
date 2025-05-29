@@ -36,7 +36,6 @@
 #' `process_prior_cases()`, `process_vaccination_routine()`, `process_vaccination_sia()`.
 #'
 #' @keywords internal
-#' @import patchwork
 #' @importFrom dplyr filter
 prepare_model_inputs <- function(
   migration,
