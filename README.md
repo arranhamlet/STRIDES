@@ -2,6 +2,8 @@
 
 **PR**ojection of **E**pidemics and **VA**ccination **I**mpact under **L**apses in coverage
 
+![alt text](img/PREVAIL_logo_upd.png)
+
 # Overview
 PREVAIL is an R package designed to support dynamic, adaptable, and comprehensive transmission modeling for vaccine-preventable diseases (VPDs), particularly in settings where routine immunization is disrupted or in decline. This work is designed to inform humanitarian response strategies by providing robust projections of disease outbreaks and intervention impact. The development of the package is supported by Community Jameel and builds on prior work funded by the FCDO for mortality rate modeling in Gaza.
 
