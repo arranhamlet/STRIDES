@@ -63,15 +63,9 @@ process_demography <- function(
 
   n_vacc <- if (number_of_vaccines == 0) 1 else number_of_vaccines * 2 + 1
 
-  years <- get_years(migration$year, start = year_start, end = year_end)
-  time_run_for <- length(years)
+  years_all <- get_years(migration$year, start = year_start, end = year_end)
+  time_run_for <- length(years_all)
   time_all <- 0:(time_run_for - 1)
-
-  data.table::setDT(migration)
-  data.table::setDT(fertility)
-  data.table::setDT(mortality)
-  data.table::setDT(population_all)
-  data.table::setDT(population_female)
 
   migration <- migration %>% subset(iso3 == iso)
   fertility <- fertility %>% subset(iso3 == iso)
@@ -79,7 +73,13 @@ process_demography <- function(
   population_all <- population_all %>% subset(iso3 == iso)
   population_female <- population_female %>% subset(iso3 == iso)
 
-  pop_all_raw <- as.matrix(population_all[year %in% years, paste0("x", 0:100), with = FALSE])
+  data.table::setDT(migration)
+  data.table::setDT(fertility)
+  data.table::setDT(mortality)
+  data.table::setDT(population_all)
+  data.table::setDT(population_female)
+
+  pop_all_raw <- as.matrix(population_all[year %in% years_all, paste0("x", 0:100), with = FALSE])
   pop_all <- collapse_age_bins(pop_all_raw, n_age)
 
   all_ages <- 0:100
@@ -95,7 +95,7 @@ process_demography <- function(
   reformatted_contact_matrix <- symmetrize_contact_matrix(reformatted_contact_matrix, pop = pop_all[nrow(pop_all), ])
   reformatted_contact_matrix <- project_to_symmetric_doubly_stochastic(reformatted_contact_matrix)
 
-  mort_mat_raw <- as.matrix(mortality[year %in% years, paste0("x", 0:100), with = FALSE])
+  mort_mat_raw <- as.matrix(mortality[year %in% years_all, paste0("x", 0:100), with = FALSE])
   mort_mat <- collapse_age_bins(mort_mat_raw, n_age)
   mortality_rate <- pmin(mort_mat / pop_all, 1)
   mortality_rate[!is.finite(mortality_rate)] <- 1
@@ -104,8 +104,8 @@ process_demography <- function(
     data.table::setnames(c("dim1", "dim3", "value")) %>%
     dplyr::mutate(dim2 = 1)
 
-  fert_mat <- as.matrix(fertility[year %in% years, paste0("x", 15:49), with = FALSE])
-  pop_fem <- as.matrix(population_female[year %in% years, paste0("x", 15:49), with = FALSE])
+  fert_mat <- as.matrix(fertility[year %in% years_all, paste0("x", 15:49), with = FALSE])
+  pop_fem <- as.matrix(population_female[year %in% years_all, paste0("x", 15:49), with = FALSE])
   denom <- rowSums(pop_fem)
   denom[denom == 0] <- NA
 
@@ -115,7 +115,7 @@ process_demography <- function(
     value = pmin(rowSums((fert_mat / 1000) * pop_fem) / denom, 1)
   )
 
-  mig_rates <- migration[year %in% years, migration_rate_1000]
+  mig_rates <- migration[year %in% years_all, migration_rate_1000]
 
   migration_in_number <- data.table::rbindlist(lapply(seq_len(nrow(pop_all)), function(i) {
     mig_vals <- round(pop_all[i, ] * mig_rates[i])
@@ -166,8 +166,8 @@ process_demography <- function(
     contact_matrix = reformatted_contact_matrix,
     input_data = data.frame(
       iso = iso,
-      year_start = min(years),
-      year_end = max(years),
+      year_start = min(years_all),
+      year_end = max(years_all),
       n_age = n_age,
       n_vacc = n_vacc,
       n_risk = n_risk
