@@ -57,6 +57,7 @@ prepare_model_inputs <- function(
   number_of_vaccines = 0,
   n_risk = 1
 ) {
+
   # Step 1: Process demographic data
   demographic <- process_demography(
     migration = migration,
@@ -75,7 +76,7 @@ prepare_model_inputs <- function(
 
   # Filter external inputs to final model year
   vaccination_data_routine <- vaccination_data_routine %>%
-    filter(YEAR <= demographic$input_data$year_end)
+    filter(year <= demographic$input_data$year_end)
 
   disease_data <- disease_data %>%
     filter(year <= demographic$input_data$year_end)

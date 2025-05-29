@@ -57,24 +57,14 @@ data_load_process_wrapper <- function(
   )
 
   # --------------------------------------------
-  # Integrate Pre-1980 Vaccination Coverage
-  # --------------------------------------------
-  total_vac <- expand_pre1980_vaccination(
-    processed_vaccination = model_data_preprocessed$processed_vaccination_data,
-    vaccination_pre1980 = vaccination_pre1980,
-    iso = iso,
-    disease = disease
-  )
-
-  # --------------------------------------------
   # Prepare Case & Vaccination Parameters
   # --------------------------------------------
   case_vaccination_ready <- case_vaccine_to_param(
     demog_data = model_data_preprocessed$processed_demographic_data,
-    processed_vaccination = total_vac,
+    processed_vaccination = model_data_preprocessed$processed_vaccination_data,
     processed_vaccination_sia = model_data_preprocessed$processed_vaccination_sia,
     processed_case = model_data_preprocessed$processed_case_data,
-    vaccination_schedule = vaccination_schedule %>% dplyr::filter(ISO_3_CODE == iso)
+    vaccination_schedule = vaccination_schedule %>% dplyr::filter(iso3 == iso)
   )
 
   # --------------------------------------------

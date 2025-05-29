@@ -23,31 +23,30 @@ process_vaccination_routine <- function(
     year_end = ""
 ){
   setDT(vaccination_data)
-  years <- get_years(vaccination_data$YEAR, year_start, year_end)
+  years <- get_years(vaccination_data$year, year_start, year_end)
 
-  filtered <- vaccination_data[CODE == iso & YEAR %in% years] %>%
-    filter(!is.na(COVERAGE))
+  filtered <- vaccination_data[iso3 == iso & year %in% years] %>%
+    filter(!is.na(coverage))
 
   if (vaccine != "All") {
-    filtered <- filtered[grepl(vaccine, ANTIGEN_DESCRIPTION, ignore.case = TRUE) |
-                         grepl(vaccine, Disease, ignore.case = TRUE)]
+    filtered <- filtered[
+      grepl(globalenv()$vaccine, vaccine_description, ignore.case = TRUE) |
+        grepl(globalenv()$vaccine, disease, ignore.case = TRUE)
+    ]
   }
 
   filtered %>%
     janitor::clean_names() %>%
-    group_by(year, antigen, antigen_description) %>%
+    group_by(year, vaccine, vaccine_description, dose_order) %>%
     summarise(
-      target_number = median(target_number, na.rm = TRUE),
-      doses = median(doses, na.rm = TRUE),
-      dose_order = median(dose_order, na.rm = TRUE),
       coverage = median(coverage, na.rm = TRUE),
       .groups = "drop"
     ) %>%
     arrange(year) %>%
     mutate(dose_order = case_when(
-      grepl("4th", antigen_description) ~ 4,
-      grepl("5th", antigen_description) ~ 5,
-      grepl("6th", antigen_description) ~ 6,
+      grepl("4th", vaccine_description) ~ 4,
+      grepl("5th", vaccine_description) ~ 5,
+      grepl("6th", vaccine_description) ~ 6,
       TRUE ~ dose_order
     ))
 }

@@ -34,3 +34,5 @@ Imports:
     patchwork,
     data.table
 RoxygenNote: 7.2.3
+Depends: 
+    R (>= 3.5)

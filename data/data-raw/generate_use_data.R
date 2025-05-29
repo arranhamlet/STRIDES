@@ -10,12 +10,14 @@ pacman::p_load(
   janitor,
   here,
   rlang,
+  data.table,
+  squire.page,
   tidyverse
 )
 
 #Import data
-all_rds <- list.files("data", full.names = T, pattern = ".rds")
-rds_names <- gsub("data/|.rds", "", all_rds)
+all_rds <- list.files(path = "data/data-raw/", full.names = T, pattern = ".rds", recursive = T)
+rds_names <- gsub("data/data-raw/|.rds", "", all_rds)
 
 rds_list <- sapply(all_rds, function(x) readRDS(x))
 
@@ -37,17 +39,23 @@ VIMC_vaccination_sia <- sia_vaccination  %>%
          age = age,
          coverage = coverage,
          disease = disease,
-         vaccine = vaccine)
+         vaccine = vaccine) %>%
+  subset(!disease %in% c("je", "yf", "tet", "tb"))
 WHO_vaccination_routine <- routine_vaccination_data %>%
   select(iso3 = CODE,
          area = NAME,
+         year = YEAR,
          vaccine = ANTIGEN,
          vaccine_description = ANTIGEN_DESCRIPTION,
          coverage_category = COVERAGE_CATEGORY,
          coverage_description = COVERAGE_CATEGORY_DESCRIPTION,
          coverage = COVERAGE,
          dose_order,
-         disease = Disease)
+         disease = Disease) %>%
+  subset(
+    disease %in% c("Diphtheria (childhood combination vaccine)", "Diphtheria, Tetanus, Pertussis (childhood vaccine)",
+                   "Measles") | grepl("mening|Poliomyelitis|Rubella", disease, ignore.case = T)
+  )
 WHO_vaccination_schedule <- vaccination_schedule %>%
   select(iso3 = ISO_3_CODE,
          area = COUNTRYNAME,
@@ -60,7 +68,11 @@ WHO_vaccination_schedule <- vaccination_schedule %>%
          target_pop_description = TARGETPOP_DESCRIPTION,
          geoarea = GEOAREA,
          age_administered = AGEADMINISTERED,
-         comment = SOURCECOMMENT)
+         comment = SOURCECOMMENT) %>%
+  subset(vaccine_code %in% c("D_S", "DIP", "DT", "DTAP","DTAPHEPBIPV", "DTAPHIB", "DTAPHIBHEPB", "DTAPHIBHEPBIPV", "DTAPHIBIPV", "DTAPIPV", "DTIPV", "DTWP", "DTWPHEPB", "DTWPHIB", "DTWPHIBHEPB", "DTWPHIBHEPBIPV", "MEASLES",
+                             "MEN_A_CONJ", "MEN_A_PS", "MEN_AC_CONJ", "MEN_AC_PS", "MEN_ACYW_135CONJ", "MEN_ACYW_135PS", "MEN_B", "MEN_BC", "MEN_C_CONJ", "MM", "MMR", "MMRV", "MR", "OPV", "PCV_15_VALENT", "PCV10", "PCV13",
+                             "PCV20", "PPV23", "RUBELLA", "TD_S", "TDAP_S", "TDAP_S_IPV", "TDIPV_S"))
+
 vaccination_pre1980 <- vaccination_pre1980 %>%
   janitor::clean_names()
 vaccine_parameters <- vaccine_parameters

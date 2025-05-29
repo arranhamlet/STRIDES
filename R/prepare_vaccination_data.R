@@ -3,7 +3,7 @@
 #' Uses historical assumptions to estimate vaccination coverage prior to the first observed year.
 #' Applies linear interpolation from an assumed introduction year up to the first observed coverage year.
 #'
-#' @param processed_vaccination Routine coverage data (to determine first year and antigen).
+#' @param processed_vaccination Routine coverage data (to determine first year and vaccine).
 #' @param vaccination_pre1980 Data frame of historical vaccine assumptions (intro year, starting coverage).
 #' @param disease Disease name (lowercase) to match.
 #' @param iso 3-letter ISO country code.
@@ -32,7 +32,7 @@ expand_pre1980_vaccination <- function(processed_vaccination, vaccination_pre198
 
   # Remove special populations
   processed_vaccination <- processed_vaccination %>%
-    dplyr::filter(!grepl("birth|neonatal|pregnant|maternal", antigen_description, ignore.case = TRUE))
+    dplyr::filter(!grepl("birth|neonatal|pregnant|maternal", vaccine_description, ignore.case = TRUE))
 
   first_year_vac <- processed_vaccination %>%
     dplyr::filter(year == min(year))
@@ -85,6 +85,7 @@ case_vaccine_to_param <- function(
   vaccination_schedule,
   vaccination_pre1980
 ) {
+
   iso <- demog_data$input_data$iso
   n_age <- demog_data$input_data$n_age
   ages <- 0:(n_age - 1)
@@ -94,8 +95,8 @@ case_vaccine_to_param <- function(
     processed_case$disease_description,
     processed_vaccination_sia$vaccination_name,
     processed_vaccination_sia$disease,
-    processed_vaccination$antigen,
-    processed_vaccination$antigen_description
+    processed_vaccination$vaccine,
+    processed_vaccination$vaccine_description
   )) %>% paste(collapse = "|")
 
   if (grepl("Diphtheria|Pertussis", vaccination_type, ignore.case = TRUE)) {

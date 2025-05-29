@@ -27,7 +27,7 @@ process_vaccination_sia <- function(
     rename(vaccination_name = vaccine)
 
   vaccination_data[!is.na(coverage) &
-                   country == iso &
+                   area == iso &
                    year %in% years &
                    grepl(vaccine, vaccination_name, ignore.case = TRUE)]
 }

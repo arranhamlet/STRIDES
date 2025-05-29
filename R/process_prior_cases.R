@@ -19,9 +19,10 @@ process_prior_cases <- function(
 ) {
   setDT(disease_data)
   years <- get_years(disease_data$year, year_start, year_end)
+  print(head(disease_data))
   filtered <- disease_data[iso3 == iso & year %in% years & !is.na(cases) & cases != 0]
   if (disease != "All") {
     filtered <- filtered[disease_short == disease]
-  } 
+  }
   return(filtered)
 }
