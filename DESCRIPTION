@@ -1,16 +1,36 @@
-Package: STRIDES
-Type: Package
-Title: What the Package Does (Title Case)
+Package: PREVAIL
+Title: PRojection of Epidemics and VAccination Impact under Lapses in Coverage
 Version: 0.1.0
-Authors@R: c(
-    person(
-      "Jane", "Doe",
-      email = "jane@example.com",
-      role = c("aut", "cre")
-    )
-  )
-Description: More about what it does (maybe more than one line).
-    Continuation lines should be indented.
-License: What license is it under?
+Authors@R: 
+    person(given = "Arran", 
+           family = "Hamlet", 
+           role = c("aut", "cre"), 
+           email = "arran.hamlet14@imperial.ac.uk")
+Description: 
+    PREVAIL is an R package designed to support dynamic, adaptable, and comprehensive 
+    transmission modeling for vaccine-preventable diseases (VPDs), particularly in crisis 
+    settings where routine immunization services are disrupted. Developed using the odin2 
+    framework, PREVAIL enables stochastic, age-structured, and risk-structured disease 
+    transmission models that account for routine immunization, supplemental campaigns, 
+    and waning immunity. The package is tailored for humanitarian use cases, such as 
+    refugee settings or conflict zones, where the probability of outbreaks is high and 
+    intervention strategies must be robust and responsive. It includes flexible input 
+    handling, realistic population dynamics, and tools to project cases, attack rates, 
+    and impact of delayed or proactive vaccination campaigns. PREVAIL is supported by 
+    Community Jameel and builds on work funded by the FCDO for mortality rate modeling 
+    in Gaza.
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+Imports:
+    odin2,
+    rio,
+    here,
+    dust2,
+    tidyverse,
+    reshape2,
+    collapse,
+    janitor,
+    patchwork,
+    data.table
+RoxygenNote: 7.2.3

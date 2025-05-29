@@ -1,0 +1,64 @@
+Abbreviation,Disease
+15HPV1_F,Human papillomavirus
+15HPV1_M,Human papillomavirus
+15HPVC_F,Human papillomavirus
+15HPVC_M,Human papillomavirus
+BCG,Tuberculosis
+DIPHCV4,Diphtheria (childhood combination vaccine)
+DIPHCV5,Diphtheria (childhood combination vaccine)
+DIPHCV6,Diphtheria (childhood combination vaccine)
+DTPCV1,"Diphtheria, Tetanus, Pertussis (childhood vaccine)"
+DTPCV3,"Diphtheria, Tetanus, Pertussis (childhood vaccine)"
+FLU_ALL,Influenza
+FLU_CHILD1,Influenza
+FLU_CHILD2,Influenza
+FLU_CHRONIC_ADULT,Influenza
+FLU_CHRONIC_PED,Influenza
+FLU_ELDERLY,Influenza
+FLU_HCW,Influenza
+FLU_OTHER,Influenza
+FLU_PW,Influenza
+FLU_RESIDENT,Influenza
+HEPB_BD,Hepatitis B
+HEPB_BDALL,Hepatitis B
+HEPB3,Hepatitis B
+HIB3,Haemophilus influenzae type b
+HPV_FEM,Human papillomavirus
+HPV_FEM1,Human papillomavirus
+HPV_MALE,Human papillomavirus
+HPV_MALE1,Human papillomavirus
+IPV1,Poliomyelitis (Inactivated Polio Vaccine)
+IPV1_FRAC,Poliomyelitis (Inactivated Polio Vaccine)
+IPV2_FRAC,Poliomyelitis (Inactivated Polio Vaccine)
+JAPENC,Japanese Encephalitis
+MCV1,Measles
+MCV2,Measles
+MENACYW_C,"Meningococcal (A, C, Y, W conjugate)"
+MENB_C,Meningococcal B
+PAB,Pertussis antibody (maternal booster)
+PCV1,Pneumococcal disease
+PCV2,Pneumococcal disease
+PCV3,Pneumococcal disease
+PERCV_PW,Pertussis (maternal booster)
+PERCV4,Pertussis (maternal booster)
+POL3,Poliomyelitis (oral/inactivated)
+PRHPV1_F,Human papillomavirus (pilot/research)
+PRHPV1_M,Human papillomavirus (pilot/research)
+PRHPVC_F,Human papillomavirus (pilot/research)
+PRHPVC_M,Human papillomavirus (pilot/research)
+RCV1,Rubella
+ROTA1,Rotavirus
+ROTAC,Rotavirus
+TT2PLUS,"Tetanus (booster, typically in pregnancy)"
+TTCV4,Tetanus toxoid-containing vaccine
+TTCV5,Tetanus toxoid-containing vaccine
+TTCV6,Tetanus toxoid-containing vaccine
+TYPHOID_CONJ,Typhoid (conjugate vaccine)
+VAD1,Vitamin A supplementation (not a vaccine)
+YFV,Yellow Fever
+FLU_CHRONIC_ALL,Influenza
+FLU_HAJ,Influenza
+MEN_ACYW_CONJ,"Meningococcal A, C, Y, W (conjugate)"
+MEN_B,Unknown
+MEN_A_CONJ,Meningococcal A (conjugate)
+TYPHOID,Typhoid fever
