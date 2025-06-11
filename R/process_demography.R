@@ -1,55 +1,15 @@
-#' Prepare Demographic Inputs for a Transmission Model
+#' Prepare Demographic Inputs for a Transmission Model (with Custom Age Groups)
 #'
-#' This function processes raw demographic data—covering migration, fertility, mortality,
-#' population counts, and age-specific contact matrices—into a structured format suitable for use
-#' in an age-, vaccination-, and risk-structured infectious disease transmission model.
+#' This function processes raw demographic data into a structured format using
+#' custom age groups, suitable for transmission modeling.
 #'
-#' The function uses tidyverse conventions (`dplyr`, `purrr`, `tidyr`) and assumes consistent
-#' naming of age columns (e.g., `x0` to `x100` for all population counts).
+#' @inheritParams process_demography
 #'
-#' @param migration A data frame with net migration rates by year and country. Must include columns
-#'   `iso3`, `year`, and `migration_rate_1000`.
-#' @param fertility A data frame with fertility rates by single year of age (15–49) and year.
-#'   Must include columns `iso3`, `year`, and `x15` to `x49`.
-#' @param mortality A data frame with mortality counts by single year of age (0–100) and year.
-#'   Must include columns `iso3`, `year`, and `x0` to `x100`.
-#' @param population_all A data frame of total population counts by single year of age (0–100) and year.
-#'   Must include columns `iso3`, `year`, and `x0` to `x100`.
-#' @param population_female A data frame of female population counts by single year of age (15–49) and year.
-#'   Must include columns `iso3`, `year`, and `x15` to `x49`.
-#' @param contact_matricies A named list of 16x16 contact matrices by country ISO3 code. If a matrix for the
-#'   specified country is not available, the mean of all provided matrices is used.
-#' @param iso A three-letter ISO country code (character) used to subset the demographic inputs.
-#' @param year_start First year to include (numeric or empty string ""). If `""`, uses earliest year in data.
-#' @param year_end Final year to include (numeric or empty string ""). If `""`, uses latest year in data.
-#' @param n_age Integer. Number of collapsed age bins to use in the model (e.g., 16 for 5-year bins).
-#' @param number_of_vaccines Integer. Number of vaccine doses considered. Determines number of strata.
-#' @param n_risk Integer. Number of risk strata in the model.
-#'
-#' @return A named list containing:
-#' \describe{
-#'   \item{N0}{Tibble of initial population counts by age, risk, and vaccination state for model time 0.}
-#'   \item{crude_birth}{Tibble of crude birth rates by time and risk.}
-#'   \item{crude_death}{Tibble of annual mortality rates by age.}
-#'   \item{tt_migration}{Vector of 0-indexed model time points corresponding to migration years.}
-#'   \item{migration_in_number}{Tibble of estimated net migration counts by time, age, and strata.}
-#'   \item{migration_distribution_values}{Tibble of ones across all time, for uniform migration distribution.}
-#'   \item{population_data}{Matrix of collapsed population counts by age and time (scaled to thousands).}
-#'   \item{contact_matrix}{Symmetric, doubly stochastic contact matrix matching collapsed age bins.}
-#'   \item{input_data}{Tibble summarizing the scenario metadata (country, years, stratification counts).}
-#' }
-#'
-#' @examples
-#' # process_demography(migration, fertility, mortality, population_all, population_female,
-#' #                    contact_matricies, iso = "KEN", year_start = 2000, year_end = 2020,
-#' #                    n_age = 16, number_of_vaccines = 2, n_risk = 2)
-#'
-#' @keywords internal
+#' @return A named list of formatted demographic and structural inputs.
 #' @import dplyr
 #' @import purrr
 #' @import tidyr
 #' @importFrom reshape2 melt
-
 process_demography <- function(
     migration,
     fertility,
@@ -60,11 +20,13 @@ process_demography <- function(
     iso,
     year_start = "",
     year_end = "",
-    n_age = 1,
     number_of_vaccines = 0,
     n_risk = 1
 ) {
-
+  age_breaks <- c(0, 1, 5, 10, 15, 20, 30, 40, 50, 60, 70, 80, Inf)
+  age_labels <- paste0(head(age_breaks, -1), "-", head(age_breaks[-1] - 1, -1))
+  age_labels[length(age_labels)] <- "80+"
+  n_age <- length(age_labels)
   n_vacc <- if (number_of_vaccines == 0) 1 else number_of_vaccines * 2 + 1
 
   years_all <- get_years(migration$year, start = year_start, end = year_end)
@@ -82,10 +44,25 @@ process_demography <- function(
   pop_cols <- paste0("x", all_ages)
   fem_cols <- paste0("x", female_ages)
 
-  pop_all_raw <- population_all %>% select(all_of(pop_cols)) %>% as.matrix()
-  pop_all <- collapse_age_bins(pop_all_raw, n_age)
+  collapse_age_custom <- function(mat, age_breaks) {
+    all_ages <- 0:(ncol(mat) - 1)
+    age_groups <- cut(all_ages, breaks = age_breaks, right = FALSE, labels = FALSE)
+    collapsed <- t(apply(mat, 1, function(row) tapply(row, age_groups, sum, na.rm = TRUE)))
+    if (nrow(collapsed) == 1) matrix(collapsed, nrow = 1) else collapsed
+  }
 
-  age_groups <- sapply(split(all_ages, sort(all_ages %% n_age)), min)
+  pop_all_raw <- population_all %>% select(all_of(pop_cols)) %>% as.matrix()
+  pop_all <- collapse_age_custom(pop_all_raw, age_breaks)
+
+  # Contact matrix handling
+  contact_group_bounds <- seq(5, 80, by = 5)  # 0–4, 5–9, ..., 80–84
+  contact_group_midpoints <- (head(contact_group_bounds, -1) + tail(contact_group_bounds, -1)) / 2
+  contact_to_model_index <- cut(
+    contact_group_midpoints,
+    breaks = age_breaks,
+    right = FALSE,
+    labels = FALSE
+  )
 
   country_contact <- if (!iso %in% names(contact_matricies)) {
     Reduce(`+`, contact_matricies) / length(contact_matricies)
@@ -93,12 +70,32 @@ process_demography <- function(
     contact_matricies[[iso]]
   }
 
-  reformatted_contact_matrix <- reformat_contact_matrix(country_contact, age_groups)
-  reformatted_contact_matrix <- symmetrize_contact_matrix(reformatted_contact_matrix, pop = pop_all[nrow(pop_all), ])
+  # Define midpoints of custom age groups
+  custom_midpoints <- (head(age_breaks, -1) + tail(age_breaks, -1)) / 2
+  custom_midpoints[is.infinite(custom_midpoints)] <- max(age_breaks[is.finite(age_breaks)])
+
+  # Define midpoints of 5-year bins in contact matrix: 0–4, 5–9, ..., 80–84
+  contact_group_bounds <- seq(0, 85, by = 5)
+  contact_midpoints <- (head(contact_group_bounds, -1) + tail(contact_group_bounds, -1)) / 2
+
+  # Map each custom midpoint to closest original contact matrix row/col
+  nearest_idx <- function(x, from) which.min(abs(from - x))
+  row_map <- vapply(custom_midpoints, nearest_idx, from = contact_midpoints, FUN.VALUE = integer(1))
+  col_map <- vapply(custom_midpoints, nearest_idx, from = contact_midpoints, FUN.VALUE = integer(1))
+
+  # Build reduced contact matrix by nearest value
+  reduced_contact_matrix <- matrix(0, nrow = n_age, ncol = n_age)
+  for (i in 1:n_age) {
+    for (j in 1:n_age) {
+      reduced_contact_matrix[i, j] <- country_contact[row_map[i], col_map[j]]
+    }
+  }
+
+  reformatted_contact_matrix <- symmetrize_contact_matrix(reduced_contact_matrix, pop = pop_all[nrow(pop_all), ])
   reformatted_contact_matrix <- project_to_symmetric_doubly_stochastic(reformatted_contact_matrix)
 
   mort_mat <- mortality %>% select(all_of(pop_cols)) %>% as.matrix()
-  mort_mat <- collapse_age_bins(mort_mat, n_age)
+  mort_mat <- collapse_age_custom(mort_mat, age_breaks)
   mortality_rate <- pmin(mort_mat / pop_all, 1)
   mortality_rate[!is.finite(mortality_rate)] <- 1
 
@@ -121,28 +118,25 @@ process_demography <- function(
 
   migration_in_number <- map_dfr(seq_len(nrow(pop_all)), function(i) {
     mig_vals <- round(pop_all[i, ] * mig_rates[i])
-    chunk <- split_and_sum(mig_vals, n_age)
     tibble(
       dim1 = seq_len(n_age),
       dim2 = 1,
       dim3 = 1,
       dim4 = i,
-      value = chunk
+      value = mig_vals
     )
   })
 
   init_vals <- round(pop_all[1, ] * 1000)
-  init_chunk <- split_and_sum(init_vals, n_age)
-
   N0_df <- tibble(
     dim1 = seq_len(n_age),
     dim2 = 1,
     dim3 = 1,
-    value = init_chunk
+    value = init_vals
   )
 
   total_population_df <- map_dfr(seq_len(nrow(pop_all)), function(i) {
-    chunk <- split_and_sum(round(pop_all[i, ] * 1000), n_age)
+    chunk <- round(pop_all[i, ] * 1000)
     tibble(
       dim1 = seq_len(n_age),
       dim2 = 1,
@@ -166,6 +160,7 @@ process_demography <- function(
     migration_distribution_values = migration_distribution_values,
     population_data = pop_all,
     contact_matrix = reformatted_contact_matrix,
+    aging = 1/diff(age_breaks),
     input_data = tibble(
       iso = iso,
       year_start = min(years_all),

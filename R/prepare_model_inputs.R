@@ -68,7 +68,6 @@ prepare_model_inputs <- function(
     iso = iso,
     year_start = year_start,
     year_end = year_end,
-    n_age = n_age,
     number_of_vaccines = number_of_vaccines,
     n_risk = n_risk
   )
@@ -112,7 +111,6 @@ prepare_model_inputs <- function(
     processed_demographic_data = demographic,
     processed_case_data = cases,
     processed_vaccination_data = routine,
-    processed_vaccination_sia = sia,
-    demographic_plots = NULL
+    processed_vaccination_sia = sia
   )
 }

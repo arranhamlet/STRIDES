@@ -55,7 +55,7 @@ data_load_process_wrapper <- function(
   # ---- Prepare demographic and vaccine data ----
   model_data_preprocessed <- prepare_model_inputs(
     iso = iso, disease = disease, vaccine = vaccine,
-    n_age = 101, number_of_vaccines = number_of_vaccines,
+    number_of_vaccines = number_of_vaccines,
     migration = migration, fertility = fertility, mortality = mortality,
     population_all = population_all, population_female = population_female,
     contact_matricies = contact_matricies,
@@ -85,9 +85,9 @@ data_load_process_wrapper <- function(
       dplyr::filter(order == min(order))
 
     dplyr::bind_rows(
-      expand.grid(dim1 = 1:101, dim2 = j,     dim3 = 1,
+      expand.grid(dim1 = 1:model_data_preprocessed$processed_demographic_data$input_data$n_age, dim2 = j,     dim3 = 1,
                   value = dose_details$value[dose_details$parameter == "short_term_protection"]),
-      expand.grid(dim1 = 1:101, dim2 = j + 1, dim3 = 1,
+      expand.grid(dim1 = 1:model_data_preprocessed$processed_demographic_data$input_data$n_age, dim2 = j + 1, dim3 = 1,
                   value = dose_details$value[dose_details$parameter == "long_term_protection"])
     )
   })
@@ -177,7 +177,7 @@ data_load_process_wrapper <- function(
     tt_vaccination_coverage = time_changes_vac,
     crude_birth = model_data_preprocessed$processed_demographic_data$crude_birth %>% dplyr::mutate(value = value / (365 / time_adjust)),
     crude_death = model_data_preprocessed$processed_demographic_data$crude_death %>% dplyr::mutate(value = value / (365 / time_adjust)),
-    aging_rate = time_adjust / 365,
+    aging_rate = time_adjust / model_data_preprocessed$processed_demographic_data$aging,
     migration_in_number = model_data_preprocessed$processed_demographic_data$migration_in_number %>% dplyr::mutate(value = value / (365 / time_adjust)),
     migration_distribution_values = model_data_preprocessed$processed_demographic_data$migration_distribution_values,
     tt_seeded = if (WHO_seed_switch) time_changes_seeded else c(0, max(time_changes_seeded)),
