@@ -69,7 +69,8 @@ prepare_model_inputs <- function(
     year_start = year_start,
     year_end = year_end,
     number_of_vaccines = number_of_vaccines,
-    n_risk = n_risk
+    n_risk = n_risk,
+    n_age = 101
   )
 
   # Filter external inputs to final model year

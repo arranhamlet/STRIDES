@@ -55,7 +55,7 @@ data_load_process_wrapper <- function(
   # ---- Prepare demographic and vaccine data ----
   model_data_preprocessed <- prepare_model_inputs(
     iso = iso, disease = disease, vaccine = vaccine,
-    number_of_vaccines = number_of_vaccines,
+    n_age = 101, number_of_vaccines = number_of_vaccines,
     migration = migration, fertility = fertility, mortality = mortality,
     population_all = population_all, population_female = population_female,
     contact_matricies = contact_matricies,
