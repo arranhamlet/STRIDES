@@ -45,9 +45,6 @@
 #' @param migration_represent_current_pop If 1, distribution reflects current population
 #' @param cfr_normal Case fatality rate for normal cases
 #' @param cfr_severe Case fatality rate for severe cases
-#' @param user_specified_foi Flag to override FOI
-#' @param initial_FOI Initial force of infection
-#' @param foi_turn_off_when_vaccinating Binary flag to zero FOI when vaccinating
 #'
 #' @return A named list of structured model inputs
 #'

@@ -37,7 +37,7 @@
 #'
 #' @keywords internal
 #' @importFrom dplyr filter
-prepare_model_inputs <- function(
+prepare_model_inputs2 <- function(
   migration,
   fertility,
   mortality,
@@ -56,6 +56,8 @@ prepare_model_inputs <- function(
   number_of_vaccines = 0,
   n_risk = 1
 ) {
+
+  print("yes")
 
   # Step 1: Process demographic data
   demographic <- process_demography(

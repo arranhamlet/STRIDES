@@ -10,6 +10,7 @@
 #'
 #' @return A filtered `data.table` containing only records for the specified country, time range, and disease.
 #' @keywords internal
+#'
 process_prior_cases <- function(
     disease_data,
     iso,
@@ -23,7 +24,8 @@ process_prior_cases <- function(
   setDT(disease_data)
   print(disease_data[1, ])
 
-  filtered <- disease_data[iso3 == iso & year %in% years & !is.na(cases) & cases != 0]
+  filtered <- disease_data %>%
+    dplyr::filter(iso3 == iso, year %in% years, !is.na(cases), cases != 0)
 
   if (disease != "All") {
     filtered <- filtered[disease_short == disease]
