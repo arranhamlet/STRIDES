@@ -9,8 +9,8 @@
 #' @param year_end Final year to include (default: last year in data).
 #'
 #' @return A filtered `data.table` containing only records for the specified country, time range, and disease.
+#' @import data.table
 #' @keywords internal
-#'
 process_prior_cases <- function(
     disease_data,
     iso,
@@ -21,15 +21,17 @@ process_prior_cases <- function(
 
   years <- get_years(disease_data$year, year_start, year_end)
 
-  setDT(disease_data)
+  data.table::setDT(disease_data)
 
-  filtered <- disease_data %>%
-    dplyr::filter(iso3 == iso, year %in% years, !is.na(cases), cases != 0)
+  # Filter using data.table chaining
+  filtered <- disease_data[
+    iso3 == iso & year %in% years & !is.na(cases) & cases != 0
+  ]
 
   if (disease != "All") {
-    filtered <- filtered %>%
-      dplyr::filter(disease_short == disease)
+    filtered <- filtered[disease_short == disease]
   }
 
-  return(filtered)
+  filtered
 }
+

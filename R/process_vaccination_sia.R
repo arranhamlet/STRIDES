@@ -9,28 +9,31 @@
 #' @param year_end Final year to include (default: last year in the data).
 #'
 #' @return A filtered `data.table` with records matching the selected country, vaccine, and time period.
-#' @keywords internal
-#'
 #' @import data.table
-#' @import dplyr
+#' @keywords internal
 process_vaccination_sia <- function(
     vaccination_data,
     iso,
     vaccine = "All",
     year_start = "",
     year_end = ""
-){
-
+) {
+  # Ensure data.table format
   setDT(vaccination_data)
+
+  # Standardize variable name to match expectations
+  setnames(vaccination_data, old = "vaccine", new = "vaccination_name", skip_absent = TRUE)
+
+  # Subset by years
   years <- get_years(vaccination_data$year, year_start, year_end)
 
-  vaccination_data <- vaccination_data %>%
-    rename(vaccination_name = vaccine)
+  # Filter efficiently with chaining
+  result <- vaccination_data[
+    !is.na(coverage) &
+      area == iso &
+      year %in% years &
+      (vaccine == "All" | grepl(vaccine, vaccination_name, ignore.case = TRUE))
+  ]
 
-  vaccination_data %>%
-    filter(!is.na(coverage),
-           area == iso,
-           year %in% years,
-           grepl(vaccine, vaccination_name, ignore.case = TRUE))
-
+  return(result[])
 }

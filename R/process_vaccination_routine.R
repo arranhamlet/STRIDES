@@ -10,46 +10,58 @@
 #' @param year_end Final year to include (default: last year in the data).
 #'
 #' @return A data frame summarising median target population, doses delivered, dose order, and coverage by year and antigen.
-#' @keywords internal
 #'
 #' @import data.table
-#' @import dplyr
-#' @importFrom janitor clean_names
+#' @keywords internal
 process_vaccination_routine <- function(
     vaccination_data,
     iso,
     vaccine = "All",
     year_start = "",
     year_end = ""
-){
+) {
+  # Ensure data.table format
   setDT(vaccination_data)
+
+  # Standardize column names like janitor::clean_names()
+  setnames(vaccination_data, tolower(gsub("[^[:alnum:]]+", "_", names(vaccination_data))))
+  # Standardize variable name to match expectations
+  setnames(vaccination_data, old = "vaccine", new = "vaccination_name", skip_absent = TRUE)
+
   years <- get_years(vaccination_data$year, year_start, year_end)
 
-  filtered <- vaccination_data %>%
-    filter(iso3 == iso, year %in% years, !is.na(coverage))
+  # Basic filtering
+  filtered <- vaccination_data[
+    iso3 == iso & year %in% years & !is.na(coverage)
+  ]
 
+  # Optional vaccine string filter
   if (vaccine != "All") {
-    filter_by_vaccine <- function(filtered, vaccine) {
-      filtered %>%
-        dplyr::filter(
-          grepl(vaccine, vaccine_description, ignore.case = TRUE) |
-            grepl(vaccine, disease, ignore.case = TRUE)
-        )
-    }
+    filtered <- filtered[
+      grepl(vaccine, vaccine_description, ignore.case = TRUE) |
+        grepl(vaccine, disease, ignore.case = TRUE)
+    ]
   }
 
-  filtered %>%
-    janitor::clean_names() %>%
-    group_by(year, vaccine, vaccine_description, dose_order) %>%
-    summarise(
-      coverage = median(coverage, na.rm = TRUE),
-      .groups = "drop"
-    ) %>%
-    arrange(year) %>%
-    mutate(dose_order = case_when(
-      grepl("4th", vaccine_description) ~ 4,
-      grepl("5th", vaccine_description) ~ 5,
-      grepl("6th", vaccine_description) ~ 6,
-      TRUE ~ dose_order
-    ))
+  # Infer correct dose_order if necessary
+  filtered[
+    grepl("4th", vaccine_description, ignore.case = TRUE), dose_order := 4
+  ][
+    grepl("5th", vaccine_description, ignore.case = TRUE), dose_order := 5
+  ][
+    grepl("6th", vaccine_description, ignore.case = TRUE), dose_order := 6
+  ]
+
+  # Aggregate by year, vaccination_name, vaccine_description, dose_order
+  result <- filtered[
+    ,
+    .(coverage = median(coverage, na.rm = TRUE)),
+    by = .(year, vaccination_name, vaccine_description, dose_order)
+  ][
+    order(year)
+  ]
+
+  setnames(result, "vaccination_name", "vaccine")
+
+  return(result[])
 }

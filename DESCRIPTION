@@ -24,10 +24,10 @@ Encoding: UTF-8
 LazyData: true
 Imports:
     odin2,
-    rio,
-    here,
     dust2,
-    tidyverse,
+    dplyr,
+    tidyr,
+    purrr,
     reshape2,
     collapse,
     janitor,
