@@ -20,14 +20,17 @@ process_vaccination_sia <- function(
     year_start = "",
     year_end = ""
 ){
+
   setDT(vaccination_data)
   years <- get_years(vaccination_data$year, year_start, year_end)
 
   vaccination_data <- vaccination_data %>%
     rename(vaccination_name = vaccine)
 
-  vaccination_data[!is.na(coverage) &
-                   area == iso &
-                   year %in% years &
-                   grepl(vaccine, vaccination_name, ignore.case = TRUE)]
+  vaccination_data %>%
+    filter(!is.na(coverage),
+           area == iso,
+           year %in% years,
+           grepl(vaccine, vaccination_name, ignore.case = TRUE))
+
 }

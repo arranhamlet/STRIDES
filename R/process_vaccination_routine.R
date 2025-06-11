@@ -25,14 +25,17 @@ process_vaccination_routine <- function(
   setDT(vaccination_data)
   years <- get_years(vaccination_data$year, year_start, year_end)
 
-  filtered <- vaccination_data[iso3 == iso & year %in% years] %>%
-    filter(!is.na(coverage))
+  filtered <- vaccination_data %>%
+    filter(iso3 == iso, year %in% years, !is.na(coverage))
 
   if (vaccine != "All") {
-    filtered <- filtered[
-      grepl(globalenv()$vaccine, vaccine_description, ignore.case = TRUE) |
-        grepl(globalenv()$vaccine, disease, ignore.case = TRUE)
-    ]
+    filter_by_vaccine <- function(filtered, vaccine) {
+      filtered %>%
+        dplyr::filter(
+          grepl(vaccine, vaccine_description, ignore.case = TRUE) |
+            grepl(vaccine, disease, ignore.case = TRUE)
+        )
+    }
   }
 
   filtered %>%

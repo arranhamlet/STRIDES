@@ -38,7 +38,7 @@ data_load_process_wrapper <- function(
     0
   )
 
-  model_data_preprocessed <- prepare_model_inputs2(
+  model_data_preprocessed <- prepare_model_inputs(
     iso = iso,
     disease = disease,
     vaccine = vaccine,
@@ -205,5 +205,6 @@ data_load_process_wrapper <- function(
 
   )
 
+  params
 
 }

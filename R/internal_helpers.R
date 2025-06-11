@@ -9,6 +9,7 @@
 #'
 #' @return A matrix of contact rates with dimensions matching the provided age vector.
 #' @keywords internal
+#' @import data.table
 reformat_contact_matrix <- function(contact_matrix_raw, age_vector) {
 
   # Define age groups based on 5-year intervals
@@ -459,7 +460,7 @@ df_to_array <- function(df) {
 #' @param updates Optional `data.frame` with columns `dim1`, `dim2`, ..., and `value` to override specific positions.
 #'
 #' @return A `data.frame` with columns `ID`, `dim1`, ..., and `value`, representing all array coordinates.
-#'
+#' @import data.table
 #' @keywords internal
 generate_array_df <- function(dim1, dim2 = NULL, dim3 = NULL, dim4 = NULL, dim5 = NULL, dim6 = NULL,
                               default_value = 0, updates = NULL) {
@@ -474,23 +475,26 @@ generate_array_df <- function(dim1, dim2 = NULL, dim3 = NULL, dim4 = NULL, dim5 
   if (!is.null(updates) && nrow(updates) > 0) {
     key_cols <- paste0("dim", seq_len(n_dims))
 
-    # Coerce both updates and grid to integer
-    updates[, (key_cols) := lapply(.SD, as.integer), .SDcols = key_cols]
-    index_grid[key_cols] <- lapply(index_grid[key_cols], as.integer)
-
-    # Ensure all combinations are filled with default unless updated
+    # Ensure both are data.tables
     data.table::setDT(index_grid)
     data.table::setDT(updates)
+
+    # Coerce keys to integer using data.table idiom
+    updates[, (key_cols) := lapply(.SD, as.integer), .SDcols = key_cols]
+    index_grid[, (key_cols) := lapply(.SD, as.integer), .SDcols = key_cols]
 
     full_grid <- merge(index_grid, updates, by = key_cols, all.x = TRUE, suffixes = c("", ".update"))
     full_grid[, value := fifelse(!is.na(value.update), value.update, default_value)]
     full_grid[, value.update := NULL]
 
     index_grid <- full_grid
+  } else {
+    data.table::setDT(index_grid)
   }
 
-cbind(ID = seq_len(nrow(index_grid)), index_grid)
+  cbind(ID = seq_len(nrow(index_grid)), index_grid)
 }
+
 
 
 #' Convert Long-Format Updates into an Array

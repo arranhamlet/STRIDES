@@ -124,12 +124,6 @@ param_packager(
 \item{cfr_normal}{Case fatality rate for normal cases}
 
 \item{cfr_severe}{Case fatality rate for severe cases}
-
-\item{user_specified_foi}{Flag to override FOI}
-
-\item{initial_FOI}{Initial force of infection}
-
-\item{foi_turn_off_when_vaccinating}{Binary flag to zero FOI when vaccinating}
 }
 \value{
 A named list of structured model inputs
