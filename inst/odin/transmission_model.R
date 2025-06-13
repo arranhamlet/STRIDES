@@ -82,6 +82,9 @@ update(new_case[, , ]) <- incubated[i, j, k] + t_seeded[i, j, k]
 initial(new_case[, , ]) <- I0[i, j, k]
 dim(new_case) <- c(n_age, n_vacc, n_risk)
 
+update(t_seeded_all) <- sum(t_seeded)
+initial(t_seeded_all) <- 0
+
 #I sampling
 into_I[, , ] <- if(incubated[i, j, k] <= 0) 0 else Binomial(incubated[i, j, k], max(min(1 - prop_severe[i, j, k], 1), 0))
 into_Is[, , ] <- if(incubated[i, j, k] - into_I[i, j, k] <= 0) 0 else incubated[i, j, k] - into_I[i, j, k]

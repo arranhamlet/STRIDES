@@ -112,10 +112,18 @@ data_load_process_wrapper <- function(
     timestep == "year"    ~ 365
   )
 
+  seed_value <- dplyr::case_when(
+    timestep == "day"     ~ 1,
+    timestep == "week"    ~ 7,
+    timestep == "month"   ~ 30,
+    timestep == "quarter" ~ 91,
+    timestep == "year"    ~ 365
+  )
+
   times <- list(
-    mig = with(preprocessed$processed_demographic_data, floor(c(tt_migration, max(tt_migration) + 1) * 365 / time_factor)),
-    vac = with(cv_params, floor(c(tt_vaccination, max(tt_vaccination) + 1) * 365 / time_factor)),
-    seed = floor(cv_params$tt_seeded * 365 / time_factor)
+    mig = sort(with(preprocessed$processed_demographic_data, floor(c(tt_migration, max(tt_migration) + 1) * 365 / time_factor))),
+    vac = sort(with(cv_params, floor(c(tt_vaccination, max(tt_vaccination) + 1) * 365 / time_factor))),
+    seed = sort(floor(cv_params$tt_seeded * 365 / time_factor))
   )
 
   R0_switch_time <- times$seed[2]
@@ -129,38 +137,43 @@ data_load_process_wrapper <- function(
     as.numeric() * 365
 
   # ---- WHO Seeding ----
-  seed_data <- if (WHO_seed_switch) {
-    times$seed <- sort(unlist(lapply(times$seed, \(e) c(e, e + 1))))
+  if (WHO_seed_switch) {
 
-    seeded <- cv_params$seeded %>%
-      dplyr::filter(dim4 != 1) %>%
-      dplyr::mutate(dim4 = dplyr::case_when(
-        dim4 == 2 ~ dim4 + 1,
-        TRUE ~ dim4 * 2 - 1
-      ))
+    #Set seeds up
+    base_seed <- cv_params$seeded %>%
+      subset(dim4 != 1 ) %>%
+      mutate(dim4 = (dim4 * 2) - 2)
 
-    zeroed <- seeded %>% dplyr::mutate(dim4 = dim4 - 1, value = 0)
-    adjusted <- dplyr::bind_rows(seeded, zeroed, zeroed %>% dplyr::filter(dim4 == 2) %>% dplyr::mutate(dim4 = 1)) %>%
-      dplyr::arrange(dim4) %>%
-      dplyr::mutate(value = dplyr::case_when(dim4 == 2 & value == 0 ~ 10, TRUE ~ value))
+    zero_seed <- base_seed %>%
+      mutate(value = 0) %>%
+      mutate(dim4 = dim4 + 1)
 
-    times$seed <- times$seed[-which(group_by(adjusted, dim4) |> summarise(v = sum(value)) |> pull(v) == 0)[-1]]
-    adjusted
+    zero_seed <- rbind(zero_seed,
+                       zero_seed %>%
+                         subset(dim4 == 3) %>%
+                         mutate(dim4 = 1))
+
+    seed_data <- rbind(base_seed, zero_seed) %>%
+      arrange(dim4)
+
+    #Set times up
+    original_times <- times$seed
+    new_times <- c(0, sort(unlist(lapply(original_times[which(original_times != 0)], \(e) c(e, e + 1)))))
+    new_times <- c(new_times, max(new_times + 364), max(new_times + 365))
+    times$seed <- new_times
+
   } else {
 
+    # Default fallback if no WHO seeding
     times$seed <- c(min(times$seed), max(times$seed) + 1)
 
-    value <- dplyr::case_when(
-      timestep == "day"     ~ 1,
-      timestep == "week"    ~ 7,
-      timestep == "month"   ~ 30,
-      timestep == "quarter" ~ 91,
-      timestep == "year"    ~ 365
+    seed_data <- data.frame(
+      dim1 = 18, dim2 = 1, dim3 = 1,
+      dim4 = 1:length(times$seed),
+      value = seed_value
     )
-
-    data.frame(dim1 = 18, dim2 = 1, dim3 = 1, dim4 = 1:length(times$seed), value = value)
-
   }
+
 
   # ---- Optional Aggregation to New Age Structure ----
   if(aggregate_age) {
