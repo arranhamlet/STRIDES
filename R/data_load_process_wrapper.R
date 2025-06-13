@@ -112,14 +112,6 @@ data_load_process_wrapper <- function(
     timestep == "year"    ~ 365
   )
 
-  seed_value <- dplyr::case_when(
-    timestep == "day"     ~ 1,
-    timestep == "week"    ~ 7,
-    timestep == "month"   ~ 30,
-    timestep == "quarter" ~ 91,
-    timestep == "year"    ~ 365
-  )
-
   times <- list(
     mig = sort(with(preprocessed$processed_demographic_data, floor(c(tt_migration, max(tt_migration) + 1) * 365 / time_factor))),
     vac = sort(with(cv_params, floor(c(tt_vaccination, max(tt_vaccination) + 1) * 365 / time_factor))),
@@ -136,6 +128,14 @@ data_load_process_wrapper <- function(
     gsub("NA", 0) %>%
     as.numeric() * 365
 
+  seed_value <- dplyr::case_when(
+    timestep == "day"     ~ 1,
+    timestep == "week"    ~ 7,
+    timestep == "month"   ~ 30,
+    timestep == "quarter" ~ 91,
+    timestep == "year"    ~ 365
+  )
+
   # ---- WHO Seeding ----
   if (WHO_seed_switch) {
 
@@ -151,7 +151,11 @@ data_load_process_wrapper <- function(
     zero_seed <- rbind(zero_seed,
                        zero_seed %>%
                          subset(dim4 == 3) %>%
-                         mutate(dim4 = 1))
+                         mutate(dim4 = 1)) %>%
+      mutate(value = case_when(
+        dim4 == 1 & dim1 == 18 ~ 10,
+        TRUE ~ value
+      ))
 
     seed_data <- rbind(base_seed, zero_seed) %>%
       arrange(dim4)
