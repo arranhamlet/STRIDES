@@ -12,7 +12,8 @@ data_load_process_wrapper(
   timestep = "day",
   year_start = "",
   year_end = "",
-  WHO_seed_switch = FALSE
+  WHO_seed_switch = FALSE,
+  aggregate_age = TRUE
 )
 }
 \arguments{
@@ -24,16 +25,18 @@ data_load_process_wrapper(
 
 \item{R0}{A numeric value or vector specifying the basic reproduction number.}
 
-\item{timestep}{One of "day", "week", "month", "quarter", or "year". Used to scale time-varying inputs.}
+\item{timestep}{One of "day", "week", "month", "quarter", or "year".}
 
-\item{year_start}{Optional. Start year for simulation window. If "", uses earliest year in input data.}
+\item{year_start}{Optional. Start year for simulation window.}
 
-\item{year_end}{Optional. End year for simulation window. If "", uses latest year in input data.}
+\item{year_end}{Optional. End year for simulation window.}
 
-\item{WHO_seed_switch}{Logical. If `TRUE`, applies custom seeding structure for WHO-style simulations.}
+\item{WHO_seed_switch}{Logical. If `TRUE`, applies custom seeding to replicate data reported to the WHO from 1980.}
+
+\item{aggregate_age}{Logical. If `TRUE`, aggregates from single-year age groups to custom age groups.}
 }
 \value{
-A named list of structured parameters for the transmission model, ready to pass to `param_packager()`.
+A named list of structured parameters for the transmission model.
 }
 \description{
 This wrapper function loads internal datasets and processes them into structured model input
