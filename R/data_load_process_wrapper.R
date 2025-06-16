@@ -186,10 +186,10 @@ data_load_process_wrapper <- function(
     aging_vector <- diff(new_age_breaks) / (365 / time_factor)
     aging_vector[is.infinite(aging_vector)] <- 0
     n_age_upd <- length(new_age_breaks) - 1
-    aging_rate <- time_factor / 365
 
     aggregate_inputs <- function(obj, method = "weighted.mean") {
-      aggregate_age_structure(obj, age_breaks = new_age_breaks, method = method, weights = pop_weights)
+      wts <- if (method == "sum") NULL else pop_weights
+      aggregate_age_structure(obj, age_breaks = new_age_breaks, method = method, weights = wts)
     }
 
     n_age = length(new_age_breaks) - 1
@@ -202,10 +202,11 @@ data_load_process_wrapper <- function(
       mig_in         = aggregate_inputs(preprocessed$processed_demographic_data$migration_in_number %>% dplyr::mutate(value = value / (365 / time_factor)), method = "sum"),
       mig_dist       = aggregate_inputs(preprocessed$processed_demographic_data$migration_distribution_values),
       seeded         = aggregate_inputs(seed_data, method = "sum"),
-      contact_matrix = aggregate_contact_matrix(preprocessed$processed_demographic_data$contact_matrix, age_breaks = new_age_breaks, weights = pop_weights)
+      contact_matrix = aggregate_contact_matrix(preprocessed$processed_demographic_data$contact_matrix, age_breaks = new_age_breaks, method = "sum")
     )
 
   } else {
+
     n_age <- preprocessed$processed_demographic_data$input_data$n_age
     aging_rate <- preprocessed$processed_demographic_data$aging_rate
 
@@ -219,6 +220,13 @@ data_load_process_wrapper <- function(
       seeded         = seed_data,
       contact_matrix = preprocessed$processed_demographic_data$contact_matrix
     )
+  }
+
+  if (aggregate_age) {
+    aging_vector <- diff(new_age_breaks)
+    aging_rate <- time_factor / (365 * aging_vector)
+  } else {
+    aging_rate <- rep(time_factor / 365, preprocessed$processed_demographic_data$input_data$n_age)
   }
 
   # ---- Return Packaged Parameters ----
@@ -248,13 +256,13 @@ data_load_process_wrapper <- function(
     tt_vaccination_coverage = times$vac,
     crude_birth = preprocessed$processed_demographic_data$crude_birth %>% dplyr::mutate(value = value / (365 / time_factor)),
     crude_death = inputs$crude_death,
-    aging_rate = time_factor / 365,
+    aging_rate = aging_rate,
     migration_in_number = inputs$mig_in,
     migration_distribution_values = inputs$mig_dist,
     tt_seeded = if (WHO_seed_switch) times$seed else c(0, max(times$seed)),
     seeded = inputs$seeded,
-    repro_low = if(n_age == 101) 15 else min(which(new_age_breaks >= 15)),
-    repro_high = if(n_age == 101) 49 else min(which(new_age_breaks >= 49)),
+    repro_low = if(n_age == 101) 15 else min(which(new_age_breaks > 15)),
+    repro_high = if(n_age == 101) 49 else min(which(new_age_breaks > 49)),
     age_maternal_protection_ends = 1,
     protection_weight_vacc = 1,
     protection_weight_rec = 1,

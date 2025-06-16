@@ -111,7 +111,7 @@ param_packager <- function(
     tt_seeded = tt_seeded,
     no_seeded_changes = length(tt_seeded),
     aging_rate = {
-      x <- format_array(aging_rate, n_age)
+      x <- format_array(data.frame(value = aging_rate, dim1 = 1:n_age), n_age)
       x[n_age] <- 0
       x
     },

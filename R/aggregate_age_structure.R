@@ -14,20 +14,17 @@ aggregate_age_structure <- function(obj, age_breaks, method = c("sum", "mean", "
 
   method <- match.arg(method, c("sum", "mean", "weighted.mean"))
 
-  # Identify all age indices present in the model
+  # Identify full model age range
   all_model_ages <- sort(unique(obj$dim1))
   n_age_model <- max(all_model_ages)
-
-  # Create full age vector assuming dim1 starts at 1 and represents ages 0:(n-1)
   full_ages <- 0:(max(n_age_model, length(weights)) - 1)
 
-  # Determine age group index for each possible model age
+  # Map ages to aggregate groups
   age_group_index <- cut(full_ages, breaks = age_breaks, right = FALSE, labels = FALSE)
   n_age_new <- length(age_breaks) - 1
 
-  # Map only those dim1 values present in the object
-  obj_ages <- obj$dim1
-  obj$age_group <- age_group_index[obj_ages]
+  # Assign group labels to data
+  obj$age_group <- age_group_index[obj$dim1]
 
   if (method == "sum") {
     out <- obj %>%
@@ -51,22 +48,22 @@ aggregate_age_structure <- function(obj, age_breaks, method = c("sum", "mean", "
     if (is.null(weights)) stop("Weights must be provided for method = 'weighted.mean'")
     if (length(weights) != length(full_ages)) stop("Length of weights must match full age vector (e.g., 0:100)")
 
-    # Create named weight lookup
+    # Build weight lookup and assign to object
     weight_map <- setNames(weights, as.character(seq_along(full_ages)))
-
-    # Match weights to only the dim1 values present
     obj$weight <- weight_map[as.character(obj$dim1)]
 
+    # Normalize weights within each group
     out <- obj %>%
       dplyr::group_by(across(-c(value, weight, dim1))) %>%
+      dplyr::mutate(norm_weight = weight / sum(weight, na.rm = TRUE)) %>%
       dplyr::summarise(
         dim1 = unique(age_group),
-        value = weighted.mean(value, weight, na.rm = TRUE),
+        value = sum(value * norm_weight, na.rm = TRUE),
         .groups = "drop"
       )
   }
 
-  # Final formatting
+  # Final cleanup
   out$dim1 <- as.integer(out$dim1)
   out <- dplyr::filter(out, dim1 <= n_age_new)
 
