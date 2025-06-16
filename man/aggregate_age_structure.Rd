@@ -8,20 +8,23 @@ aggregate_age_structure(
   obj,
   age_breaks,
   method = c("sum", "mean", "weighted.mean"),
-  weights = NULL
+  weights = NULL,
+  time_var = "dim4"
 )
 }
 \arguments{
-\item{obj}{A data frame with at least the columns `dim1` and `value`. Typically model output like vaccination coverage or seeding.}
+\item{obj}{A data frame with at least the columns `dim1` and `value`. If using time-varying weights, must also include a time column (default: `dim4`).}
 
 \item{age_breaks}{A numeric vector of breakpoints defining age bands (e.g. c(0, 1, 5, 10, 20, 30, 40, 50, 60, 70, 80, Inf)).}
 
-\item{method}{Character. One of `"sum"`, `"mean"`, or `"weighted.mean"`. Controls how values are aggregated within each age band.}
+\item{method}{One of `"sum"`, `"mean"`, or `"weighted.mean"`. Controls aggregation method.}
 
-\item{weights}{Optional numeric vector of weights (e.g., population) for `method = "weighted.mean"`. Must match the full set of model ages (e.g., 0:100 or 1:101).}
+\item{weights}{Optional. Either a numeric vector of length 101 (ages 0–100) or a matrix/data.frame of dimension (time × age).}
+
+\item{time_var}{Name of the column in `obj` representing time (used only if `weights` is time-varying). Default is `"dim4"`.}
 }
 \value{
-A data frame with aggregated `dim1` values matching the number of age groups defined by `age_breaks`.
+A data frame with aggregated `dim1` values and other dimensions preserved.
 }
 \description{
 Aggregates a long-format data frame with an age dimension (`dim1`) into custom age groups

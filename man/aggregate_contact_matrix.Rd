@@ -4,7 +4,12 @@
 \alias{aggregate_contact_matrix}
 \title{Aggregate a Square Contact Matrix to Custom Age Groups}
 \usage{
-aggregate_contact_matrix(mat, age_breaks, weights = NULL)
+aggregate_contact_matrix(
+  mat,
+  age_breaks,
+  weights = NULL,
+  method = c("weighted.mean", "sum")
+)
 }
 \arguments{
 \item{mat}{A square numeric matrix where both rows and columns correspond to single-year ages (e.g., 0:100).}
@@ -12,7 +17,9 @@ aggregate_contact_matrix(mat, age_breaks, weights = NULL)
 \item{age_breaks}{A numeric vector of age cut points (e.g. `c(0, 1, 5, 10, 15, 20, 30, 40, 50, 60, 70, 80, Inf)`).}
 
 \item{weights}{Optional numeric vector of length equal to `nrow(mat)` (e.g., population by age).
-If supplied, the function computes population-weighted means within groups.}
+Required if `method = "weighted.mean"`.}
+
+\item{method}{Aggregation method. One of `"weighted.mean"` (default) or `"sum"`.}
 }
 \value{
 A square matrix of size `(length(age_breaks) - 1)` aggregated by age group.

@@ -72,6 +72,12 @@ R_death[, , ] <- if(R_available[i, j, k] <= 0) 0 else Binomial(R_available[i, j,
 Is_death[, , ] <- if(Is_available[i, j, k] <= 0) 0 else Binomial(Is_available[i, j, k], max(min(background_death[i, k], 1), 0) + max(cfr_severe[i], 0))
 Rc_death[, , ] <- if(Rc_available[i, j, k] <= 0) 0 else Binomial(Rc_available[i, j, k], max(min(background_death[i, k], 1), 0))
 
+update(dead_all) <- sum(S_death) + sum(E_death) + sum(I_death) + sum(R_death) + sum(Is_death) + sum(Rc_death)
+initial(dead_all) <- 0
+
+update(births_all) <- sum(Births)
+initial(births_all) <- 0
+
 
 #S sampling
 waning_R[, , ] <- if(R_after_aging[i, j, k] <= 0) 0 else Binomial(R_after_aging[i, j, k], max(min(natural_immunity_waning, 1), 0))
@@ -81,9 +87,6 @@ waning_Rc[, , ] <- if(Rc_after_aging[i, j, k] <= 0) 0 else Binomial(Rc_after_agi
 update(new_case[, , ]) <- incubated[i, j, k] + t_seeded[i, j, k]
 initial(new_case[, , ]) <- I0[i, j, k]
 dim(new_case) <- c(n_age, n_vacc, n_risk)
-
-update(t_seeded_all) <- sum(t_seeded)
-initial(t_seeded_all) <- 0
 
 #I sampling
 into_I[, , ] <- if(incubated[i, j, k] <= 0) 0 else Binomial(incubated[i, j, k], max(min(1 - prop_severe[i, j, k], 1), 0))

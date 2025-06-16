@@ -19,7 +19,9 @@ expand_pre1980_vaccination <- function(processed_vaccination, vaccination_pre198
   vac_pre1980_sub[, rowname := .I]  # preserve row identity
   vac_pre1980_sub[, income_group := paste0(paste0(substr(unlist(strsplit(income_group, " |-")), 1, 1), collapse = ""), "C"),
                   by = rowname]
-  vac_pre1980_sub[, disease_n := disease]
+
+  setnames(vac_pre1980_sub, "disease", "disease_n")
+
   vac_pre1980_sub <- vac_pre1980_sub[
     tolower(disease_n) == disease &
       who_region == paste0(get_WHO_region(iso), "O") &
@@ -99,6 +101,7 @@ case_vaccine_to_param <- function(
     processed_vaccination$vaccine,
     processed_vaccination$vaccine_description
   )
+
   vaccination_type <- paste(unique(vaccination_sources), collapse = "|")
 
   if (grepl("Diphtheria|Pertussis", vaccination_type, ignore.case = TRUE)) {

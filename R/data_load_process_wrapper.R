@@ -181,26 +181,27 @@ data_load_process_wrapper <- function(
 
   # ---- Optional Aggregation to New Age Structure ----
   if(aggregate_age) {
-    pop_weights <- last(preprocessed$processed_demographic_data$population_data)
+
+    pop_weights <- preprocessed$processed_demographic_data$population_data
     new_age_breaks <- c(0, 1, 5, 10, 15, 20, 30, 40, 50, 60, 70, 80, Inf)
     aging_vector <- diff(new_age_breaks) / (365 / time_factor)
     aging_vector[is.infinite(aging_vector)] <- 0
     n_age_upd <- length(new_age_breaks) - 1
 
-    aggregate_inputs <- function(obj, method = "weighted.mean") {
-      wts <- if (method == "sum") NULL else pop_weights
-      aggregate_age_structure(obj, age_breaks = new_age_breaks, method = method, weights = wts)
+    aggregate_inputs <- function(obj, method = "weighted.mean", weights = NULL, time_var = "dim4") {
+      wts <- if (method == "sum") NULL else weights
+      aggregate_age_structure(obj, age_breaks = new_age_breaks, method = method, weights = wts, time_var = time_var)
     }
 
     n_age = length(new_age_breaks) - 1
 
     inputs <- list(
-      age_beta_mod   = aggregate_inputs(age_vaccination_beta_modifier),
-      vacc_cov       = aggregate_inputs(cv_params$vaccination_coverage),
+      age_beta_mod   = aggregate_inputs(age_vaccination_beta_modifier, weights = as.numeric(last(pop_weights))),
+      vacc_cov       = aggregate_inputs(cv_params$vaccination_coverage, weights = pop_weights),
       N0             = aggregate_inputs(preprocessed$processed_demographic_data$N0, method = "sum"),
-      crude_death    = aggregate_inputs(preprocessed$processed_demographic_data$crude_death %>% dplyr::mutate(value = value / (365 / time_factor))),
+      crude_death    = aggregate_inputs(preprocessed$processed_demographic_data$crude_death %>% dplyr::mutate(value = value / (365 / time_factor)), weights = pop_weights, time_var = "dim3"),
       mig_in         = aggregate_inputs(preprocessed$processed_demographic_data$migration_in_number %>% dplyr::mutate(value = value / (365 / time_factor)), method = "sum"),
-      mig_dist       = aggregate_inputs(preprocessed$processed_demographic_data$migration_distribution_values),
+      mig_dist       = aggregate_inputs(preprocessed$processed_demographic_data$migration_distribution_values, weights = pop_weights, time_var = "dim2"),
       seeded         = aggregate_inputs(seed_data, method = "sum"),
       contact_matrix = aggregate_contact_matrix(preprocessed$processed_demographic_data$contact_matrix, age_breaks = new_age_breaks, method = "sum")
     )
@@ -230,7 +231,7 @@ data_load_process_wrapper <- function(
   }
 
   # ---- Return Packaged Parameters ----
-  param_packager(
+  packed_params <- param_packager(
     n_age = n_age,
     n_vacc = n_vacc,
     n_risk = preprocessed$processed_demographic_data$input_data$n_risk,
@@ -261,11 +262,26 @@ data_load_process_wrapper <- function(
     migration_distribution_values = inputs$mig_dist,
     tt_seeded = if (WHO_seed_switch) times$seed else c(0, max(times$seed)),
     seeded = inputs$seeded,
-    repro_low = if(n_age == 101) 15 else min(which(new_age_breaks > 15)),
-    repro_high = if(n_age == 101) 49 else min(which(new_age_breaks > 49)),
+    repro_low = if(n_age == 101) 15 else min(which(new_age_breaks >= 15)),
+    repro_high = if(n_age == 101) 49 else max(which(new_age_breaks <= 49)),
     age_maternal_protection_ends = 1,
     protection_weight_vacc = 1,
     protection_weight_rec = 1,
     migration_represent_current_pop = 1
   )
+
+  packed_params$input_data <- data.frame(
+    iso,
+    disease,
+    vaccine,
+    R0,
+    timestep ,
+    year_start,
+    year_end,
+    WHO_seed_switch,
+    aggregate_age
+  )
+
+  packed_params
+
 }
