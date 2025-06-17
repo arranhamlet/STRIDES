@@ -10,6 +10,9 @@
 #' @param time_var Name of the column in `obj` representing time (used only if `weights` is time-varying). Default is `"dim4"`.
 #'
 #' @return A data frame with aggregated `dim1` values and other dimensions preserved.
+#'
+#' @importFrom dplyr group_by summarise mutate filter across
+#' @importFrom data.table first
 #' @export
 aggregate_age_structure <- function(obj,
                                     age_breaks,
@@ -29,7 +32,7 @@ aggregate_age_structure <- function(obj,
     out <- obj %>%
       dplyr::group_by(dplyr::across(-c(value, dim1))) %>%
       dplyr::summarise(
-        dim1 = unique(age_group),
+        dim1 = data.table::first(age_group),
         value = sum(value, na.rm = TRUE),
         .groups = "drop"
       )
@@ -38,7 +41,7 @@ aggregate_age_structure <- function(obj,
     out <- obj %>%
       dplyr::group_by(dplyr::across(-c(value, dim1))) %>%
       dplyr::summarise(
-        dim1 = unique(age_group),
+        dim1 = data.table::first(age_group),
         value = mean(value, na.rm = TRUE),
         .groups = "drop"
       )
@@ -49,7 +52,6 @@ aggregate_age_structure <- function(obj,
     if (is.matrix(weights) || is.data.frame(weights)) {
       if (!(time_var %in% names(obj))) stop("Time variable not found in data and required for time-varying weights")
 
-      # Assign time-varying weights: row = time, col = age
       obj$weight <- mapply(function(age, time) {
         weights[time, age + 1]  # age 0 maps to column 1
       }, obj$dim1 - 1, obj[[time_var]])
@@ -65,7 +67,7 @@ aggregate_age_structure <- function(obj,
       dplyr::group_by(dplyr::across(-c(value, weight, dim1))) %>%
       dplyr::mutate(norm_weight = weight / sum(weight, na.rm = TRUE)) %>%
       dplyr::summarise(
-        dim1 = unique(age_group),
+        dim1 = data.table::first(age_group),
         value = sum(value * norm_weight, na.rm = TRUE),
         .groups = "drop"
       )
