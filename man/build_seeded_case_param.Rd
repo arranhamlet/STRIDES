@@ -7,19 +7,18 @@
 build_seeded_case_param(processed_case, demog_data, years, ages)
 }
 \arguments{
-\item{processed_case}{A data frame with year and cases.}
+\item{processed_case}{A data frame with `year` and `cases` columns.}
 
-\item{demog_data}{A named list including `population_data`, a matrix by year and age.}
+\item{demog_data}{A named list including `population_data`, a matrix of counts.}
 
-\item{years}{Vector of model years.}
+\item{years}{A numeric vector of model years.}
 
-\item{ages}{Vector of model age groups.}
+\item{ages}{A numeric vector of age bins.}
 }
 \value{
-A data frame with dimensions dim1 (age), dim2, dim3, dim4 (year offset), and value.
+A data frame with columns: dim1 (age), dim2, dim3, dim4 (year offset), and value.
 }
 \description{
-Constructs a time- and age-structured seeding input array for model initialization using
-observed or assumed case distributions.
+Constructs a time- and age-structured seeding input array for model initialization.
 }
 \keyword{internal}

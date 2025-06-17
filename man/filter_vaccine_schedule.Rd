@@ -9,12 +9,12 @@ filter_vaccine_schedule(vaccination_schedule, vaccination_type, iso)
 \arguments{
 \item{vaccination_schedule}{A data frame of WHO vaccination schedules.}
 
-\item{vaccination_type}{A character string for matching VACCINE_DESCRIPTION.}
+\item{vaccination_type}{A character string to match against `vaccine_description`.}
 
 \item{iso}{A 3-letter ISO country code.}
 }
 \value{
-A filtered and arranged data frame with an added `age_years` numeric column.
+A filtered and arranged `data.frame` with an added `age_years` column.
 }
 \description{
 Filters a WHO vaccination schedule data frame to extract age-specific routine vaccination

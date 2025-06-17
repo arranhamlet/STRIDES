@@ -18,7 +18,7 @@ process_obj(
 \arguments{
 \item{this_obj}{The model output array to process.}
 
-\item{present_dimensions}{Character vector of dimension labels for this state (e.g., c("age", "vaccination", "risk", "time")).}
+\item{present_dimensions}{Character vector of dimension labels for this state (e.g., `c("age", "vaccination", "risk", "time")`).}
 
 \item{colnames}{Column names for the output data table.}
 
@@ -33,10 +33,10 @@ process_obj(
 \item{dust_state}{List of all unpacked model state arrays.}
 }
 \value{
-A list containing two `data.table`s: detailed output and time-aggregated output.
+A list of two `data.table`s: the full stratified long-format output and a reduced time-by-state (and optionally run) aggregation.
 }
 \description{
-Transforms a multi-dimensional model output array into a long-format data table for analysis,
-handling both multi-particle and single-particle models efficiently.
+Transforms a multi-dimensional dust model output array into a long-format data.table,
+assigning appropriate names to dimensions and unpacking by particle if needed.
 }
 \keyword{internal}

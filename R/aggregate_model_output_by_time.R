@@ -13,13 +13,10 @@
 #' @param start_date A string date (e.g. "2020-01-01") indicating the model time origin.
 #'
 #' @return A data.table with time-aggregated results.
-#' @import data.table
+#' @importFrom data.table as.data.table
 #' @importFrom lubridate floor_date
 #' @export
 aggregate_model_output_by_time <- function(df, timestep = "day", target_unit = "week", start_date = "2000-01-01") {
-
-  if (!requireNamespace("data.table", quietly = TRUE)) stop("Please install the 'data.table' package.")
-  if (!requireNamespace("lubridate", quietly = TRUE)) stop("Please install the 'lubridate' package.")
 
   timestep <- tolower(timestep)
   target_unit <- tolower(target_unit)
@@ -62,7 +59,7 @@ aggregate_model_output_by_time <- function(df, timestep = "day", target_unit = "
   out_rate <- dt[state %in% rate_vars, .(value = mean(value, na.rm = TRUE)), by = group_cols]
 
   # Combine all
-  out <- rbindlist(list(out_flow, out_stock, out_rate), use.names = TRUE, fill = TRUE)
+  out <- data.table::rbindlist(list(out_flow, out_stock, out_rate), use.names = TRUE, fill = TRUE)
 
   return(out[])
 }

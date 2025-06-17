@@ -7,19 +7,19 @@
 summary_plots(model_run, params)
 }
 \arguments{
-\item{model_run}{A `data.frame` or `data.table` of model output in long format,
-including columns `time`, `state`, `value`, `age`, `risk`, and `vaccination`.}
+\item{model_run}{A `data.frame` or `data.table` in long format, including columns `time`, `state`, `value`, `age`, `risk`, and `vaccination`.}
 
-\item{params}{A named list of model input parameters, including `n_age`, `timestep`,
-and `input_data$year_start`.}
+\item{params}{A named list of model input parameters, including `n_age`, `timestep`, and `input_data$year_start`.}
 }
 \value{
 A named list containing:
-\item{select_state_plot}{A ggplot object showing key compartment values over time}
-\item{susceptibility_plot}{A ggplot object showing age-specific susceptibility composition}
-\item{susceptibility_data}{A data.table summarizing protection categories by age and year}
+\item{select_state_plot}{A `ggplot` object showing state dynamics over time.}
+\item{susceptibility_plot}{A `ggplot` object showing age-specific susceptibility in the latest year.}
+\item{susceptibility_data}{A `data.table` summarizing protection composition by age and year.}
 }
 \description{
-This function processes model output and produces a list of plots including
-selected states over time and age-specific susceptibility composition for the latest year.
+Processes model output and generates:
+1. A time-series plot of selected states.
+2. A stacked bar chart of age-specific susceptibility profiles.
+3. A long-format data.table with stratified susceptibility proportions.
 }

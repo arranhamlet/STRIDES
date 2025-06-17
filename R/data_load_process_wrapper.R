@@ -196,7 +196,7 @@ data_load_process_wrapper <- function(
     n_age = length(new_age_breaks) - 1
 
     inputs <- list(
-      age_beta_mod   = aggregate_inputs(age_vaccination_beta_modifier, weights = as.numeric(last(pop_weights))),
+      age_beta_mod   = aggregate_inputs(age_vaccination_beta_modifier, weights = as.numeric(dplyr::last(pop_weights))),
       vacc_cov       = aggregate_inputs(cv_params$vaccination_coverage, weights = pop_weights),
       N0             = aggregate_inputs(preprocessed$processed_demographic_data$N0, method = "sum"),
       crude_death    = aggregate_inputs(preprocessed$processed_demographic_data$crude_death %>% dplyr::mutate(value = value / (365 / time_factor)), weights = pop_weights, time_var = "dim3"),

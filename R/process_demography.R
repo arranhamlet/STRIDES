@@ -45,10 +45,10 @@
 #' #                    n_age = 16, number_of_vaccines = 2, n_risk = 2)
 #'
 #' @keywords internal
-#' @import dplyr
-#' @import purrr
-#' @import tidyr
-#' @importFrom reshape2 melt
+#' @importFrom dplyr filter select mutate bind_rows across case_when
+#' @importFrom tidyr expand_grid
+#' @importFrom purrr map_dfr
+#' @importFrom data.table melt
 
 process_demography <- function(
     migration,

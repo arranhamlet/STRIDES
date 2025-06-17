@@ -1,39 +1,34 @@
 #' Run and Unpack Dust Model Simulation Results
 #'
-#' This function initializes a dust model using an odin model and provided parameters, runs the simulation
-#' for a specified time and number of stochastic particles, and returns a long-format data frame of the
-#' unpacked and labeled model state outputs using the `unpack_dust2()` helper.
+#' Initializes and runs a Dust model using a provided odin model and parameter set, then unpacks the simulation
+#' output into a long-format `data.table` using `unpack_dust2()`. Suitable for analysis and plotting.
 #'
 #' @param odin_model An unevaluated odin model function used to construct the dust system.
-#' @param params A named list of model parameters including dimensions (`n_age`, `n_vacc`, `n_risk`),
-#'   time points (`tt_migration`), and any other inputs required by the model.
+#' @param params A named list of model parameters including `n_age`, `n_vacc`, `n_risk`, and `tt_migration`.
 #' @param time Integer. Total number of time steps to simulate (default is 1000). Time starts at 0.
 #' @param no_runs Integer. Number of stochastic particles to simulate (default is 10).
 #'
-#' @return A `data.table` in long format containing the unpacked and labeled simulation results across
-#'   dimensions such as time, age, vaccination stratum, risk group, and model state.
+#' @return A `data.table` in long format containing simulation results by state, time, and strata.
 #'
 #' @details
-#' The function uses `dust2::dust_system_create()` to create and simulate the model, and then formats
-#' the output using `unpack_dust2()` to return results ready for visualization or analysis.
+#' The function uses `dust2::dust_system_create()` to instantiate and run the simulation, and `unpack_dust2()`
+#' to reshape the result. The output includes states such as `S`, `E`, `I`, `R`, `Is`, `Rc`, `new_case`, `Reff_age`, etc.
 #'
+#' @importFrom dust2 dust_system_create dust_system_set_state_initial dust_system_simulate
 #' @export
-
 run_model_unpack_results <- function(odin_model, params, time = 1000, no_runs = 10) {
 
-  # Define the dust system and initialize it with given parameters
+  # Create and initialize the Dust system
   sys <- dust2::dust_system_create(odin_model(), params, n_particles = no_runs)
-
-  # Set the initial state for the dust system
   dust2::dust_system_set_state_initial(sys)
 
-  # Define the time vector for simulation (starting from 0)
+  # Define simulation time vector (starts at 0)
   full_time_vector <- 0:(time - 1)
 
-  # Run the dust system simulation over the defined time period
+  # Run simulation
   y <- dust2::dust_system_simulate(sys, full_time_vector)
 
-  # Process and clean output data by unpacking the results
+  # Unpack model outputs into long format
   clean_df <- unpack_dust2(
     model_system = sys,
     model_object = y,
@@ -57,6 +52,5 @@ run_model_unpack_results <- function(odin_model, params, time = 1000, no_runs = 
     )
   )
 
-  clean_df
-
+  return(clean_df)
 }

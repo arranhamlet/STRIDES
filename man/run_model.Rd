@@ -7,17 +7,17 @@
 run_model(odin_model, params, time = 1000, no_runs = 10)
 }
 \arguments{
-\item{odin_model}{An odin model function (not evaluated) used to construct the dust system.}
+\item{odin_model}{An odin model function (not yet evaluated) used to construct the dust system.}
 
 \item{params}{A named list of model parameters, including initial conditions, rates, and dimensions.}
 
 \item{time}{Integer. The number of time steps to simulate (default is 1000). Time starts at 0.}
 
-\item{no_runs}{Integer. Number of particles (stochastic simulations) to run in parallel (default is 10).}
+\item{no_runs}{Integer. Number of stochastic particles (simulations) to run in parallel (default is 10).}
 }
 \value{
-A `dust_system` object after simulation, which contains particle trajectories and system state.
-        To extract results, use `unpack_dust2()` or a compatible output processing function.
+A `dust_system` object containing the full system state and particle trajectories.
+  Use `unpack_dust2()` or similar functions to extract outputs.
 }
 \description{
 Initializes a dust model system using the provided odin model and parameters, runs the simulation

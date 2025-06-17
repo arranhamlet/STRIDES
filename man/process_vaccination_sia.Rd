@@ -13,15 +13,15 @@ process_vaccination_sia(
 )
 }
 \arguments{
-\item{vaccination_data}{A data frame or data.table containing SIA records. Must include columns `country`, `year`, `coverage`, and `vaccine`.}
+\item{vaccination_data}{A `data.frame` or `data.table` containing SIA records. Must include columns `area`, `year`, `coverage`, and `vaccine`.}
 
-\item{iso}{A 3-letter ISO country code to filter the data by.}
+\item{iso}{A 3-letter ISO country code to filter the data by (matched against the `area` column).}
 
-\item{vaccine}{A specific vaccine name or substring to filter by (default is "All" which returns all vaccines).}
+\item{vaccine}{A specific vaccine name or substring to filter by (default is `"All"` which returns all vaccines).}
 
-\item{year_start}{First year to include (default: first year in the data).}
+\item{year_start}{First year to include (default: earliest year in data).}
 
-\item{year_end}{Final year to include (default: last year in the data).}
+\item{year_end}{Final year to include (default: latest year in data).}
 }
 \value{
 A filtered `data.table` with records matching the selected country, vaccine, and time period.

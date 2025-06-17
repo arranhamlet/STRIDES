@@ -4,21 +4,19 @@
 \alias{project_to_symmetric_doubly_stochastic}
 \title{Project Matrix to Symmetric Doubly Stochastic Form}
 \usage{
-project_to_symmetric_doubly_stochastic(mat, max_iter = 1000, tol = 0.00000001)
+project_to_symmetric_doubly_stochastic(mat, max_iter = 1000, tol = 1e-08)
 }
 \arguments{
 \item{mat}{A non-negative square matrix.}
 
-\item{max_iter}{Maximum number of iterations (default = 1000).}
+\item{max_iter}{Maximum iterations (default = 1000).}
 
 \item{tol}{Convergence tolerance (default = 1e-8).}
 }
 \value{
-A symmetric, doubly stochastic matrix.
+A symmetric, doubly stochastic matrix of the same dimensions as `mat`.
 }
 \description{
-This function transforms a non-negative matrix into a symmetric, doubly stochastic matrix
-using iterative projections. It first symmetrizes the matrix, then applies Sinkhorn-Knopp
-normalization to enforce row and column sums of 1.
+Applies iterative Sinkhorn-Knopp projection to create a symmetric, doubly stochastic matrix.
 }
 \keyword{internal}

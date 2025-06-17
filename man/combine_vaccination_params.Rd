@@ -2,31 +2,19 @@
 % Please edit documentation in R/internal_helpers.R
 \name{combine_vaccination_params}
 \alias{combine_vaccination_params}
-\title{Combine Routine and SIA Vaccination Coverage Parameters}
+\title{Combine Routine and SIA Vaccination Parameters}
 \usage{
 combine_vaccination_params(routine_df, sia_df = NULL)
 }
 \arguments{
-\item{routine_df}{A data frame of routine vaccination parameters. Must contain columns:
-`dim1`, `dim2`, `dim3`, `dim4`, and `value`.}
+\item{routine_df}{Data frame with routine vaccination parameters.}
 
-\item{sia_df}{A data frame of SIA vaccination parameters (optional). If `NULL`, only routine data is used.}
+\item{sia_df}{Optional data frame with SIA parameters.}
 }
 \value{
-A data frame containing combined vaccination parameters with coverage values capped at 1.
-  The returned data frame contains columns: `dim1`, `dim2`, `dim3`, `dim4`, and `value`.
+A data frame with merged vaccination parameters (same structure as inputs).
 }
 \description{
-Merges routine and SIA (supplementary immunization activity) vaccination parameter data frames
-and ensures values are capped at 1 (100% coverage) for each unique parameter combination.
-}
-\details{
-This function is typically used in the pipeline preparing model inputs to ensure
-vaccination coverage parameters are bounded and consolidated before being passed
-into simulation.
-}
-\examples{
-# combine_vaccination_params(routine_df, sia_df)
-
+Adds routine and SIA vaccination parameters, capping total coverage at 100%.
 }
 \keyword{internal}

@@ -1,73 +1,82 @@
 #' Unpack Dust Model State Data
 #'
-#' This function extracts and unpacks data from a dust model state object, separating compartments and non-compartments.
+#' Extracts and unpacks state data from a dust model object, handling both compartmental and non-compartmental states.
+#' Compartmental states are unpacked via `process_obj()` and include time and stratifier dimensions;
+#' non-compartmental states (e.g., derived metrics) are returned as flat records.
 #'
-#' @param model_system The model system object containing packing information and particle details.
-#' @param model_object The dust model object containing state data.
-#' @param dimension_names List of dimension names for states, time, and other variables.
-#' @param which_state_dimensions List mapping state names to their associated dimensions.
+#' @param model_system A `dust2` system object with packing info and particle count.
+#' @param model_object A model output object returned from `dust2::dust_system_simulate()`.
+#' @param dimension_names A named list of dimension label vectors (e.g., `time`, `age`, `vaccination`, etc.).
+#' @param which_state_dimensions A named list mapping state names to dimension label sets.
 #'
-#' @return A data frame containing the unpacked dust model state data.
-#' @import data.table
+#' @return A `data.table` with unpacked model output, including `value`, `state`, `time`, and relevant stratifiers.
+#'
+#' @importFrom data.table data.table rbindlist fifelse setDT
+#' @importFrom dust2 dust_unpack_state
+#' @export
 unpack_dust2 <- function(model_system, model_object, dimension_names, which_state_dimensions) {
 
-  dust_state <- dust_unpack_state(model_system, model_object)
-  these_are_compartments <- lengths(model_system$packing_state) != 0
-  time_length <- dimension_names$time[[1]]
+  dust_state <- dust2::dust_unpack_state(model_system, model_object)
+  is_compartment <- lengths(model_system$packing_state) != 0
+  time_vector <- dimension_names$time[[1]]
   n_particles <- model_system$n_particles
 
   # --- Compartmental states ---
-  unpacked_compartments <- rbindlist(
-    lapply(which(these_are_compartments), function(x) {
+  unpacked_compartments <- data.table::rbindlist(
+    lapply(which(is_compartment), function(x) {
       this_obj <- dust_state[[x]]
       state_name <- names(dust_state)[x]
-      present_dimensions <- which_state_dimensions[[state_name]]
-      colnames <- present_dimensions
-
-      processed <- process_obj(this_obj, present_dimensions, colnames, time_length, x, model_system, dimension_names, dust_state)
-      rbindlist(processed, fill = TRUE)
+      dims <- which_state_dimensions[[state_name]]
+      processed <- process_obj(this_obj, dims, dims, time_vector, x, model_system, dimension_names, dust_state)
+      data.table::rbindlist(processed, fill = TRUE)
     }), fill = TRUE
   )
 
   # --- Non-compartmental states ---
-  unpacked_noncompartments <- rbindlist(
-    lapply(which(!these_are_compartments), function(x) {
+  unpacked_noncompartments <- data.table::rbindlist(
+    lapply(which(!is_compartment), function(x) {
       this_obj <- dust_state[[x]]
       state_name <- names(dust_state)[x]
 
       if (n_particles > 1) {
-        # vector of length n_particles
-        dt <- data.table(run = paste0("run_", seq_len(n_particles)),
-                         value = as.numeric(this_obj),
-                         time = time_length,
-                         state = state_name)
+        data.table::data.table(
+          run = paste0("run_", seq_len(n_particles)),
+          value = as.numeric(this_obj),
+          time = time_vector,
+          state = state_name
+        )
       } else {
-        dt <- data.table(value = as.numeric(this_obj),
-                         time = time_length,
-                         state = state_name)
+        data.table::data.table(
+          value = as.numeric(this_obj),
+          time = time_vector,
+          state = state_name
+        )
       }
-      return(dt)
     }), fill = TRUE
   )
 
-  # --- Combine and format ---
-  combined <- rbindlist(list(unpacked_compartments, unpacked_noncompartments), fill = TRUE)
+  # --- Combine ---
+  combined <- data.table::rbindlist(
+    list(unpacked_compartments, unpacked_noncompartments), fill = TRUE
+  )
 
-  colnames_use <- setdiff(unique(unlist(which_state_dimensions)), "time")
-
-  # Convert to character and fill NAs for stratifiers
-  for (col in colnames_use) {
+  # --- Fill stratifier columns ---
+  stratifiers <- setdiff(unique(unlist(which_state_dimensions)), "time")
+  for (col in stratifiers) {
     if (!col %in% names(combined)) {
       combined[[col]] <- "All"
     } else {
       combined[[col]] <- as.character(combined[[col]])
-      combined[[col]] <- fifelse(is.na(combined[[col]]), "All", combined[[col]])
+      combined[[col]] <- data.table::fifelse(is.na(combined[[col]]), "All", combined[[col]])
     }
   }
 
+  # --- Clean types and state factor ---
   combined[, time := as.numeric(time)]
   combined[, value := as.numeric(value)]
-  combined[, state := factor(state, levels = names(these_are_compartments))]
+
+  all_states <- names(dust_state)
+  combined[, state := factor(state, levels = all_states)]
 
   return(combined[])
 }

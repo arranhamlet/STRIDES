@@ -1,17 +1,18 @@
 #' Process Routine Vaccination Coverage Data
 #'
 #' Filters and processes routine immunization data for a specified country, time range, and optionally vaccine type.
-#' Aggregates records by year, antigen, and antigen description, summarising key indicators.
+#' Aggregates records by year, antigen, and antigen description, summarising key indicators such as median coverage.
 #'
-#' @param vaccination_data A data frame or data.table with columns including CODE, YEAR, COVERAGE, ANTIGEN, ANTIGEN_DESCRIPTION, Disease, target_number, and doses.
+#' @param vaccination_data A `data.frame` or `data.table` with columns including `ISO3`, `YEAR`, `COVERAGE`, `ANTIGEN`,
+#' `ANTIGEN_DESCRIPTION`, `Disease`, `target_number`, and `doses`.
 #' @param iso A 3-letter ISO country code to filter the data by.
-#' @param vaccine A specific vaccine name or substring to filter by (default is "All" which returns all vaccines).
-#' @param year_start First year to include (default: first year in the data).
-#' @param year_end Final year to include (default: last year in the data).
+#' @param vaccine A specific vaccine name or substring to filter by (default is `"All"`, which returns all vaccines).
+#' @param year_start First year to include (default: earliest year in data).
+#' @param year_end Final year to include (default: latest year in data).
 #'
-#' @return A data frame summarising median target population, doses delivered, dose order, and coverage by year and antigen.
+#' @return A `data.table` with columns `year`, `vaccine`, `vaccine_description`, `dose_order`, and median `coverage`.
 #'
-#' @import data.table
+#' @importFrom data.table setDT setnames
 #' @keywords internal
 process_vaccination_routine <- function(
     vaccination_data,
@@ -21,21 +22,22 @@ process_vaccination_routine <- function(
     year_end = ""
 ) {
   # Ensure data.table format
-  setDT(vaccination_data)
+  data.table::setDT(vaccination_data)
 
-  # Standardize column names like janitor::clean_names()
-  setnames(vaccination_data, tolower(gsub("[^[:alnum:]]+", "_", names(vaccination_data))))
+  # Standardize column names
+  data.table::setnames(vaccination_data, tolower(gsub("[^[:alnum:]]+", "_", names(vaccination_data))))
+
   # Standardize variable name to match expectations
-  setnames(vaccination_data, old = "vaccine", new = "vaccination_name", skip_absent = TRUE)
+  data.table::setnames(vaccination_data, old = "vaccine", new = "vaccination_name", skip_absent = TRUE)
 
   years <- get_years(vaccination_data$year, year_start, year_end)
 
-  # Basic filtering
+  # Filter by ISO3 and year, ensure coverage is non-missing
   filtered <- vaccination_data[
     iso3 == iso & year %in% years & !is.na(coverage)
   ]
 
-  # Optional vaccine string filter
+  # Optional vaccine string match (vaccine or disease)
   if (vaccine != "All") {
     filtered <- filtered[
       grepl(vaccine, vaccine_description, ignore.case = TRUE) |
@@ -43,7 +45,7 @@ process_vaccination_routine <- function(
     ]
   }
 
-  # Infer correct dose_order if necessary
+  # Infer dose_order if not already present
   filtered[
     grepl("4th", vaccine_description, ignore.case = TRUE), dose_order := 4
   ][
@@ -52,7 +54,7 @@ process_vaccination_routine <- function(
     grepl("6th", vaccine_description, ignore.case = TRUE), dose_order := 6
   ]
 
-  # Aggregate by year, vaccination_name, vaccine_description, dose_order
+  # Aggregate: median coverage by year and vaccine descriptors
   result <- filtered[
     ,
     .(coverage = median(coverage, na.rm = TRUE)),
@@ -61,7 +63,7 @@ process_vaccination_routine <- function(
     order(year)
   ]
 
-  setnames(result, "vaccination_name", "vaccine")
+  data.table::setnames(result, "vaccination_name", "vaccine")
 
   return(result[])
 }

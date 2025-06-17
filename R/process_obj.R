@@ -1,10 +1,10 @@
 #' Process Dust Model Data
 #'
-#' Transforms a multi-dimensional model output array into a long-format data table for analysis,
-#' handling both multi-particle and single-particle models efficiently.
+#' Transforms a multi-dimensional dust model output array into a long-format data.table,
+#' assigning appropriate names to dimensions and unpacking by particle if needed.
 #'
 #' @param this_obj The model output array to process.
-#' @param present_dimensions Character vector of dimension labels for this state (e.g., c("age", "vaccination", "risk", "time")).
+#' @param present_dimensions Character vector of dimension labels for this state (e.g., `c("age", "vaccination", "risk", "time")`).
 #' @param colnames Column names for the output data table.
 #' @param time_length Length of the time dimension.
 #' @param x Index of the current state in the model.
@@ -12,8 +12,9 @@
 #' @param dimension_names Named list of dimension label values for each dimension.
 #' @param dust_state List of all unpacked model state arrays.
 #'
-#' @return A list containing two `data.table`s: detailed output and time-aggregated output.
-#' @import data.table
+#' @return A list of two `data.table`s: the full stratified long-format output and a reduced time-by-state (and optionally run) aggregation.
+#'
+#' @importFrom data.table as.data.table setnames setcolorder
 #' @keywords internal
 process_obj <- function(this_obj, present_dimensions, colnames, time_length, x, model_system, dimension_names, dust_state) {
   state_name <- names(dust_state)[x]
@@ -37,19 +38,19 @@ process_obj <- function(this_obj, present_dimensions, colnames, time_length, x, 
   dimnames(this_obj) <- dim_names
 
   # Melt using base R and convert to data.table
-  melted_df <- as.data.table(as.data.frame.table(this_obj, responseName = "value"))
+  melted_df <- data.table::as.data.table(as.data.frame.table(this_obj, responseName = "value"))
 
   if (has_particles || obj_dims != expect_dims) {
     # For multi-particle or higher-dimensional models
-    setnames(melted_df, c(colnames[1:(which(colnames == "time") - 1)], "run", "time", "value"))
+    data.table::setnames(melted_df, c(colnames[1:(which(colnames == "time") - 1)], "run", "time", "value"))
     melted_df[, state := state_name]
-    setcolorder(melted_df, c("time", "state", colnames[1:(which(colnames == "time") - 1)], "run", "value"))
+    data.table::setcolorder(melted_df, c("time", "state", colnames[1:(which(colnames == "time") - 1)], "run", "value"))
     aggregate_df <- melted_df[, .(value = sum(value)), by = .(state, time, run)]
   } else {
     # For single-particle models with expected dimensions
-    setnames(melted_df, c(present_dimensions, "value"))
+    data.table::setnames(melted_df, c(present_dimensions, "value"))
     melted_df[, state := state_name]
-    setcolorder(melted_df, c("time", "state", setdiff(present_dimensions, "time"), "value"))
+    data.table::setcolorder(melted_df, c("time", "state", setdiff(present_dimensions, "time"), "value"))
     aggregate_df <- melted_df[, .(value = sum(value)), by = .(state, time)]
   }
 

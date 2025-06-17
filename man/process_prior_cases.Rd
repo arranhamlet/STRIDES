@@ -13,11 +13,11 @@ process_prior_cases(
 )
 }
 \arguments{
-\item{disease_data}{A data frame or data.table of disease records with columns for ISO3 code, year, and disease.}
+\item{disease_data}{A `data.frame` or `data.table` of disease records. Must include columns: `iso3`, `year`, `cases`, and optionally `disease_short`.}
 
 \item{iso}{A 3-letter ISO country code to filter the data by.}
 
-\item{disease}{A specific disease to filter by (default is "All" which returns all diseases).}
+\item{disease}{A specific disease to filter by. Default is `"All"`, which returns all diseases.}
 
 \item{year_start}{First year to include (default: first year in data).}
 
@@ -27,6 +27,6 @@ process_prior_cases(
 A filtered `data.table` containing only records for the specified country, time range, and disease.
 }
 \description{
-Filters and subsets disease surveillance data for a specified country, time window, and disease type.
+Filters and subsets disease surveillance data for a specified country, time window, and disease.
 }
 \keyword{internal}

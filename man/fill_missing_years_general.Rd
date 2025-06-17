@@ -2,32 +2,21 @@
 % Please edit documentation in R/internal_helpers.R
 \name{fill_missing_years_general}
 \alias{fill_missing_years_general}
-\title{Fill Missing Years by Group (Tidyverse)}
+\title{Fill Missing Years by Group}
 \usage{
 fill_missing_years_general(df, year_col, value_col)
 }
 \arguments{
-\item{df}{A data frame with at least a year and value column.}
+\item{df}{A data frame with a time series per group.}
 
-\item{year_col}{The name of the year column (as a string).}
+\item{year_col}{Name of the year column (string).}
 
-\item{value_col}{The name of the value column (as a string).}
+\item{value_col}{Name of the value column (string).}
 }
 \value{
-A tidy data frame with missing years filled for each group.
+A data frame with missing years filled and zeroed `value_col` where needed.
 }
 \description{
-For each combination of grouping columns (all columns except year_col and value_col),
-this function fills in missing consecutive years, setting the value_col to 0,
-and replicates the grouping information. One additional year is added after the last.
+Ensures continuous years for each group in a dataset and fills missing values with zero.
 }
-\examples{
-df <- tibble::tibble(
-  region = c("A", "A", "A", "B", "B"),
-  source = c("X", "X", "X", "Y", "Y"),
-  year = c(2000, 2005, 2010, 2000, 2010),
-  value = c(1, 25, 29, 3, 12)
-)
-fill_missing_years_by_group(df, year_col = "year", value_col = "value")
-
-}
+\keyword{internal}

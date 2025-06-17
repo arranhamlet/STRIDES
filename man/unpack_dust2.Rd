@@ -12,17 +12,19 @@ unpack_dust2(
 )
 }
 \arguments{
-\item{model_system}{The model system object containing packing information and particle details.}
+\item{model_system}{A `dust2` system object with packing info and particle count.}
 
-\item{model_object}{The dust model object containing state data.}
+\item{model_object}{A model output object returned from `dust2::dust_system_simulate()`.}
 
-\item{dimension_names}{List of dimension names for states, time, and other variables.}
+\item{dimension_names}{A named list of dimension label vectors (e.g., `time`, `age`, `vaccination`, etc.).}
 
-\item{which_state_dimensions}{List mapping state names to their associated dimensions.}
+\item{which_state_dimensions}{A named list mapping state names to dimension label sets.}
 }
 \value{
-A data frame containing the unpacked dust model state data.
+A `data.table` with unpacked model output, including `value`, `state`, `time`, and relevant stratifiers.
 }
 \description{
-This function extracts and unpacks data from a dust model state object, separating compartments and non-compartments.
+Extracts and unpacks state data from a dust model object, handling both compartmental and non-compartmental states.
+Compartmental states are unpacked via `process_obj()` and include time and stratifier dimensions;
+non-compartmental states (e.g., derived metrics) are returned as flat records.
 }

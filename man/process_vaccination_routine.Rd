@@ -13,21 +13,22 @@ process_vaccination_routine(
 )
 }
 \arguments{
-\item{vaccination_data}{A data frame or data.table with columns including CODE, YEAR, COVERAGE, ANTIGEN, ANTIGEN_DESCRIPTION, Disease, target_number, and doses.}
+\item{vaccination_data}{A `data.frame` or `data.table` with columns including `ISO3`, `YEAR`, `COVERAGE`, `ANTIGEN`,
+`ANTIGEN_DESCRIPTION`, `Disease`, `target_number`, and `doses`.}
 
 \item{iso}{A 3-letter ISO country code to filter the data by.}
 
-\item{vaccine}{A specific vaccine name or substring to filter by (default is "All" which returns all vaccines).}
+\item{vaccine}{A specific vaccine name or substring to filter by (default is `"All"`, which returns all vaccines).}
 
-\item{year_start}{First year to include (default: first year in the data).}
+\item{year_start}{First year to include (default: earliest year in data).}
 
-\item{year_end}{Final year to include (default: last year in the data).}
+\item{year_end}{Final year to include (default: latest year in data).}
 }
 \value{
-A data frame summarising median target population, doses delivered, dose order, and coverage by year and antigen.
+A `data.table` with columns `year`, `vaccine`, `vaccine_description`, `dose_order`, and median `coverage`.
 }
 \description{
 Filters and processes routine immunization data for a specified country, time range, and optionally vaccine type.
-Aggregates records by year, antigen, and antigen description, summarising key indicators.
+Aggregates records by year, antigen, and antigen description, summarising key indicators such as median coverage.
 }
 \keyword{internal}

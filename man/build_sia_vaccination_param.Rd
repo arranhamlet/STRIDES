@@ -7,16 +7,16 @@
 build_sia_vaccination_param(sia_data, ages, years)
 }
 \arguments{
-\item{sia_data}{A data frame with columns: age, year, coverage.}
+\item{sia_data}{A data frame with columns: `age`, `year`, and `coverage`.}
 
 \item{ages}{A numeric vector of model age groups.}
 
 \item{years}{A numeric vector of model years.}
 }
 \value{
-A data frame with dimensions dim1 (age), dim2, dim3, dim4 (year), and value (coverage).
+A data frame with columns: `dim1`, `dim2`, `dim3`, `dim4`, `value`.
 }
 \description{
-Maps SIA (supplementary immunization activity) coverage data to model parameter dimensions.
+Maps SIA coverage data to model parameter dimensions.
 }
 \keyword{internal}

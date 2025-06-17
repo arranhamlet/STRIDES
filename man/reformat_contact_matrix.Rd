@@ -7,16 +7,15 @@
 reformat_contact_matrix(contact_matrix_raw, age_vector)
 }
 \arguments{
-\item{contact_matrix_raw}{A square matrix of contact rates, with rows and columns corresponding to age groups in 5-year intervals.}
+\item{contact_matrix_raw}{A square matrix of contact rates, indexed by 5-year age groups.}
 
-\item{age_vector}{A vector of age categories that the contact matrix will be reformatted to match.}
+\item{age_vector}{A numeric vector of target age values to which the matrix should be reformatted.}
 }
 \value{
-A matrix of contact rates with dimensions matching the provided age vector.
+A square matrix of contact rates with dimensions matching `age_vector`.
 }
 \description{
-This function reformats a raw contact matrix (which uses age groups in 5-year intervals)
-to match a given age vector, mapping each age group in the contact matrix to the nearest
-value in the age vector.
+Reformats a raw contact matrix (with 5-year age intervals) to match a specified age vector.
+Assigns contact rates by nearest-neighbor matching between raw age bins and target age values.
 }
 \keyword{internal}
