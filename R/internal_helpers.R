@@ -10,6 +10,7 @@
 #' @return A matrix of contact rates with dimensions matching the provided age vector.
 #' @keywords internal
 #' @import data.table
+#' @useDynLib PREVAIL, .registration = TRUE
 reformat_contact_matrix <- function(contact_matrix_raw, age_vector) {
 
   # Define age groups based on 5-year intervals

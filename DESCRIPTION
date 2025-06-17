@@ -34,6 +34,10 @@ Imports:
     squire.page,
     patchwork,
     data.table
+LinkingTo: 
+    cpp11, 
+    dust2, 
+    monty
 RoxygenNote: 7.3.2
 Depends: 
     R (>= 3.5)
