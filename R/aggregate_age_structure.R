@@ -21,8 +21,8 @@ aggregate_age_structure <- function(obj,
                                     time_var = "dim4") {
 
   method <- match.arg(method, c("sum", "mean", "weighted.mean"))
-  full_ages <- 0:100
-  age_group_index <- cut(full_ages, breaks = age_breaks, right = FALSE, labels = FALSE)
+  full_ages <- 1:101
+  age_group_index <- cut(full_ages, breaks = age_breaks + 1, right = FALSE, labels = FALSE)
   n_age_new <- length(age_breaks) - 1
 
   # Assign age group to each row based on dim1
@@ -53,8 +53,8 @@ aggregate_age_structure <- function(obj,
       if (!(time_var %in% names(obj))) stop("Time variable not found in data and required for time-varying weights")
 
       obj$weight <- mapply(function(age, time) {
-        weights[time, age + 1]  # age 0 maps to column 1
-      }, obj$dim1 - 1, obj[[time_var]])
+        weights[time, age]  # age 0 maps to column 1
+      }, obj$dim1, obj[[time_var]])
 
     } else {
       # Static vector weights

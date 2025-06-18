@@ -227,7 +227,7 @@ data_load_process_wrapper <- function(
     aging_vector <- diff(new_age_breaks)
     aging_rate <- time_factor / (365 * aging_vector)
   } else {
-    aging_rate <- rep(time_factor / 365, preprocessed$processed_demographic_data$input_data$n_age)
+    aging_rate <- time_factor / 365
   }
 
   # ---- Return Packaged Parameters ----

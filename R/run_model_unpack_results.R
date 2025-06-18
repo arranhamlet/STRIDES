@@ -14,7 +14,6 @@
 #' The function uses `dust2::dust_system_create()` to instantiate and run the simulation, and `unpack_dust2()`
 #' to reshape the result. The output includes states such as `S`, `E`, `I`, `R`, `Is`, `Rc`, `new_case`, `Reff_age`, etc.
 #'
-#' @importFrom dust2 dust_system_create dust_system_set_state_initial dust_system_simulate
 #' @export
 run_model_unpack_results <- function(odin_model, params, time = 1000, no_runs = 10) {
 

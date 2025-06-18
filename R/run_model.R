@@ -15,18 +15,16 @@
 #' @export
 run_model <- function(odin_model, params, time = 1000, no_runs = 10) {
 
-  # Define and initialize the dust system
+  # Create and initialize the Dust system
   sys <- dust2::dust_system_create(odin_model(), params, n_particles = no_runs)
-
-  # Set the system's initial state
   dust2::dust_system_set_state_initial(sys)
 
-  # Define time vector (starts at 0)
+  # Define simulation time vector (starts at 0)
   full_time_vector <- 0:(time - 1)
 
-  # Simulate the model
-  dust2::dust_system_simulate(sys, full_time_vector)
+  # Run simulation
+  y <- dust2::dust_system_simulate(sys, full_time_vector)
 
-  # Return the system object
-  return(sys)
+  y
+
 }

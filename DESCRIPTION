@@ -33,6 +33,7 @@ Imports:
     janitor,
     squire.page,
     patchwork,
+    magrittr,
     data.table
 LinkingTo: 
     cpp11, 

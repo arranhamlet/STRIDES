@@ -65,8 +65,9 @@ summary_plots <- function(model_run, params) {
   ][
     , year := year_start + floor(as.numeric(time) / (365 / time_correct))
   ][
-    , .(value = mean(value, na.rm = TRUE)),
-    by = .(year, age, risk, vaccination, state)
+    order(time)  # ensure ordering before selecting the last value
+  ][
+    , .SD[.N], by = .(year, age, risk, vaccination, state)  # take the last row per group
   ][
     , status := data.table::fifelse(state == "S" & vaccination == 1, "Susceptible",
                                     data.table::fifelse(state == "S" & vaccination > 1, "Vaccine protected",
@@ -77,8 +78,7 @@ summary_plots <- function(model_run, params) {
       "Susceptible", "Vaccine protected", "Exposure protected", "Vaccine and exposure protected"
     ))
   ][
-    , .(value = mean(value, na.rm = TRUE)),
-    by = .(year, age, risk, vaccination, status)
+    , .(value = sum(value, na.rm = TRUE)), by = .(year, age, risk, vaccination, status)
   ][
     , prop := value / sum(value), by = .(year, age)
   ]
