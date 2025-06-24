@@ -180,9 +180,33 @@ data_load_process_wrapper <- function(
 
 
   # ---- Optional Aggregation to New Age Structure ----
+  n_age <- preprocessed$processed_demographic_data$input_data$n_age
+  aging_rate <- preprocessed$processed_demographic_data$aging_rate
+
+  default_inputs <- list(
+    age_beta_mod   = age_vaccination_beta_modifier,
+    vacc_cov       = cv_params$vaccination_coverage,
+    N0             = preprocessed$processed_demographic_data$N0,
+    crude_death    = preprocessed$processed_demographic_data$crude_death %>% dplyr::mutate(value = value / (365 / time_factor)),
+    crude_birth    = preprocessed$processed_demographic_data$crude_birth %>% dplyr::mutate(value = value / (365 / time_factor)),
+    mig_in         = preprocessed$processed_demographic_data$migration_in_number %>% dplyr::mutate(value = value / (365 / time_factor)),
+    mig_dist       = preprocessed$processed_demographic_data$migration_distribution_values,
+    seeded         = seed_data,
+    contact_matrix = preprocessed$processed_demographic_data$contact_matrix
+  )
+
   if(aggregate_age) {
 
     pop_weights <- preprocessed$processed_demographic_data$population_data
+
+    weight_reformatted <- pop_weights %>%
+      as.data.frame() %>%
+      tibble::rownames_to_column(var = "time") %>%
+      tidyr::pivot_longer(names_to = "age", values_to = "value", cols = -c("time")) %>%
+      group_by(time) %>%
+      mutate(time = as.integer(time),
+             age = as.integer(age))
+
     new_age_breaks <- c(0, 1, 5, 10, 15, 20, 30, 40, 50, 60, 70, 80, Inf)
     aging_vector <- diff(new_age_breaks) / (365 / time_factor)
     aging_vector[is.infinite(aging_vector)] <- 0
@@ -196,31 +220,21 @@ data_load_process_wrapper <- function(
     n_age = length(new_age_breaks) - 1
 
     inputs <- list(
-      age_beta_mod   = aggregate_inputs(age_vaccination_beta_modifier, weights = as.numeric(dplyr::last(pop_weights))),
-      vacc_cov       = aggregate_inputs(cv_params$vaccination_coverage, weights = pop_weights),
+      age_beta_mod   = aggregate_inputs(age_vaccination_beta_modifier, weights = weight_reformatted, time_var = NULL),
+      vacc_cov       = aggregate_inputs(cv_params$vaccination_coverage, weights = weight_reformatted),
       N0             = aggregate_inputs(preprocessed$processed_demographic_data$N0, method = "sum"),
-      crude_death    = aggregate_inputs(preprocessed$processed_demographic_data$crude_death %>% dplyr::mutate(value = value / (365 / time_factor)), weights = pop_weights, time_var = "dim3"),
+      crude_death    = aggregate_inputs(preprocessed$processed_demographic_data$crude_death %>% dplyr::mutate(value = value / (365 / time_factor)), weights = weight_reformatted, time_var = "dim3", method = "rate"),
+      crude_birth    = aggregate_inputs(preprocessed$processed_demographic_data$crude_birth %>% dplyr::mutate(value = value / (365 / time_factor)), weights = weight_reformatted, time_var = "dim2"),
       mig_in         = aggregate_inputs(preprocessed$processed_demographic_data$migration_in_number %>% dplyr::mutate(value = value / (365 / time_factor)), method = "sum"),
-      mig_dist       = aggregate_inputs(preprocessed$processed_demographic_data$migration_distribution_values, weights = pop_weights, time_var = "dim2"),
+      mig_dist       = aggregate_inputs(preprocessed$processed_demographic_data$migration_distribution_values, weights = weight_reformatted, time_var = "dim2"),
       seeded         = aggregate_inputs(seed_data, method = "sum"),
       contact_matrix = aggregate_contact_matrix(preprocessed$processed_demographic_data$contact_matrix, age_breaks = new_age_breaks, method = "sum")
     )
 
   } else {
 
-    n_age <- preprocessed$processed_demographic_data$input_data$n_age
-    aging_rate <- preprocessed$processed_demographic_data$aging_rate
+    inputs <- default_inputs
 
-    inputs <- list(
-      age_beta_mod   = age_vaccination_beta_modifier,
-      vacc_cov       = cv_params$vaccination_coverage,
-      N0             = preprocessed$processed_demographic_data$N0,
-      crude_death    = preprocessed$processed_demographic_data$crude_death %>% dplyr::mutate(value = value / (365 / time_factor)),
-      mig_in         = preprocessed$processed_demographic_data$migration_in_number %>% dplyr::mutate(value = value / (365 / time_factor)),
-      mig_dist       = preprocessed$processed_demographic_data$migration_distribution_values,
-      seeded         = seed_data,
-      contact_matrix = preprocessed$processed_demographic_data$contact_matrix
-    )
   }
 
   if (aggregate_age) {
@@ -255,7 +269,7 @@ data_load_process_wrapper <- function(
     tt_death_changes = times$mig,
     tt_migration = times$mig,
     tt_vaccination_coverage = times$vac,
-    crude_birth = preprocessed$processed_demographic_data$crude_birth %>% dplyr::mutate(value = value / (365 / time_factor)),
+    crude_birth = inputs$crude_birth,
     crude_death = inputs$crude_death,
     aging_rate = aging_rate,
     migration_in_number = inputs$mig_in,

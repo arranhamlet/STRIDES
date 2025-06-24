@@ -7,26 +7,29 @@
 aggregate_age_structure(
   obj,
   age_breaks,
-  method = c("sum", "mean", "weighted.mean"),
+  method = c("sum", "mean", "weighted.mean", "rate"),
   weights = NULL,
-  time_var = "dim4"
+  time_var = "dim4",
+  tol = 1e-06
 )
 }
 \arguments{
-\item{obj}{A data frame with at least the columns `dim1` and `value`. If using time-varying weights, must also include a time column (default: `dim4`).}
+\item{obj}{A data frame with at least the columns dim1 and value. If using time-varying weights, must also include a time column (default: dim4).}
 
-\item{age_breaks}{A numeric vector of breakpoints defining age bands (e.g. c(0, 1, 5, 10, 20, 30, 40, 50, 60, 70, 80, Inf)).}
+\item{age_breaks}{A numeric vector of breakpoints defining age bands (e.g. c(0, 1, 5, ..., Inf)).}
 
-\item{method}{One of `"sum"`, `"mean"`, or `"weighted.mean"`. Controls aggregation method.}
+\item{method}{One of "sum", "mean", "weighted.mean", or "rate". "rate" returns population-weighted rate while preserving total events.}
 
-\item{weights}{Optional. Either a numeric vector of length 101 (ages 0–100) or a matrix/data.frame of dimension (time × age).}
+\item{weights}{A numeric vector or data frame of population weights, required for "rate" and "weighted.mean".}
 
-\item{time_var}{Name of the column in `obj` representing time (used only if `weights` is time-varying). Default is `"dim4"`.}
+\item{time_var}{The name of the time column. Default is "dim4".}
+
+\item{tol}{Numerical tolerance for preservation check. Default is 1e-6.}
 }
 \value{
-A data frame with aggregated `dim1` values and other dimensions preserved.
+A data frame with aggregated dim1 values. If method = "rate", a plot is attached as an attribute.
 }
 \description{
-Aggregates a long-format data frame with an age dimension (`dim1`) into custom age groups
-based on specified `age_breaks`. Supports sum, mean, or population-weighted.mean aggregation.
+Aggregates a long-format data frame with an age dimension (dim1) into custom age groups.
+Supports sum, mean, weighted.mean, and rate-based aggregation with optional plotting check.
 }

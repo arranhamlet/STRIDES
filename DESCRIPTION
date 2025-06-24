@@ -30,6 +30,7 @@ Imports:
     purrr,
     reshape2,
     collapse,
+    tibble,
     janitor,
     squire.page,
     patchwork,
