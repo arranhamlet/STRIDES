@@ -178,10 +178,17 @@ data_load_process_wrapper <- function(
     )
   }
 
-
   # ---- Optional Aggregation to New Age Structure ----
   n_age <- preprocessed$processed_demographic_data$input_data$n_age
   aging_rate <- preprocessed$processed_demographic_data$aging_rate
+
+  weight_reformatted <- preprocessed$processed_demographic_data$population_data %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column(var = "time") %>%
+    tidyr::pivot_longer(names_to = "age", values_to = "value", cols = -c("time")) %>%
+    group_by(time) %>%
+    mutate(time = as.integer(time),
+           age = as.integer(age))
 
   default_inputs <- list(
     age_beta_mod   = age_vaccination_beta_modifier,
@@ -192,20 +199,12 @@ data_load_process_wrapper <- function(
     mig_in         = preprocessed$processed_demographic_data$migration_in_number %>% dplyr::mutate(value = value / (365 / time_factor)),
     mig_dist       = preprocessed$processed_demographic_data$migration_distribution_values,
     seeded         = seed_data,
-    contact_matrix = preprocessed$processed_demographic_data$contact_matrix
+    contact_matrix = preprocessed$processed_demographic_data$contact_matrix,
+    population = weight_reformatted %>% dplyr::rename("dim1" = "age",
+                                                      "dim2" = "time")
   )
 
   if(aggregate_age) {
-
-    pop_weights <- preprocessed$processed_demographic_data$population_data
-
-    weight_reformatted <- pop_weights %>%
-      as.data.frame() %>%
-      tibble::rownames_to_column(var = "time") %>%
-      tidyr::pivot_longer(names_to = "age", values_to = "value", cols = -c("time")) %>%
-      group_by(time) %>%
-      mutate(time = as.integer(time),
-             age = as.integer(age))
 
     new_age_breaks <- c(0, 1, 5, 10, 15, 20, 30, 40, 50, 60, 70, 80, Inf)
     aging_vector <- diff(new_age_breaks) / (365 / time_factor)
@@ -219,17 +218,25 @@ data_load_process_wrapper <- function(
 
     n_age = length(new_age_breaks) - 1
 
+    death_upd <- preprocessed$processed_demographic_data$crude_death %>% dplyr::mutate(value = value/(365/time_factor))
+    death_upd$value <- death_upd$value * weight_reformatted$value
+
     inputs <- list(
       age_beta_mod   = aggregate_inputs(age_vaccination_beta_modifier, weights = weight_reformatted, time_var = NULL),
       vacc_cov       = aggregate_inputs(cv_params$vaccination_coverage, weights = weight_reformatted),
       N0             = aggregate_inputs(preprocessed$processed_demographic_data$N0, method = "sum"),
-      crude_death    = aggregate_inputs(preprocessed$processed_demographic_data$crude_death %>% dplyr::mutate(value = value / (365 / time_factor)), weights = weight_reformatted, time_var = "dim3", method = "rate"),
+      crude_death    = aggregate_inputs(death_upd, method = "sum"),
       crude_birth    = aggregate_inputs(preprocessed$processed_demographic_data$crude_birth %>% dplyr::mutate(value = value / (365 / time_factor)), weights = weight_reformatted, time_var = "dim2"),
       mig_in         = aggregate_inputs(preprocessed$processed_demographic_data$migration_in_number %>% dplyr::mutate(value = value / (365 / time_factor)), method = "sum"),
       mig_dist       = aggregate_inputs(preprocessed$processed_demographic_data$migration_distribution_values, weights = weight_reformatted, time_var = "dim2"),
       seeded         = aggregate_inputs(seed_data, method = "sum"),
-      contact_matrix = aggregate_contact_matrix(preprocessed$processed_demographic_data$contact_matrix, age_breaks = new_age_breaks, method = "sum")
+      contact_matrix = aggregate_contact_matrix(preprocessed$processed_demographic_data$contact_matrix, age_breaks = new_age_breaks, method = "sum"),
+      population = aggregate_inputs(weight_reformatted %>% dplyr::rename("dim1" = "age",
+                                                                  "dim2" = "time"),
+                                    time_var = "dim2", method = "sum")
     )
+
+    inputs$crude_death$value <- (inputs$crude_death$value / inputs$population$value)
 
   } else {
 
@@ -243,6 +250,63 @@ data_load_process_wrapper <- function(
   } else {
     aging_rate <- time_factor / 365
   }
+
+  #Check
+  # Run comparisons for each input component
+  results <- list(
+    age_beta_mod = compare_weighted_inputs(
+      default_input = default_inputs$age_beta_mod,
+      default_weight = default_inputs$N0,
+      adapted_input = inputs$age_beta_mod,
+      adapted_weight = inputs$N0
+    ),
+    vacc_cov = compare_weighted_inputs(
+      default_input = default_inputs$vacc_cov,
+      default_weight = default_inputs$N0,
+      adapted_input = inputs$vacc_cov,
+      adapted_weight = inputs$N0
+    ),
+    N0 = compare_weighted_inputs(
+      default_input = default_inputs$N0,
+      default_weight = default_inputs$N0,
+      adapted_input = inputs$N0,
+      adapted_weight = inputs$N0,
+      method = "sum"
+    ),
+    crude_death = compare_weighted_inputs(
+      default_input = default_inputs$crude_death,
+      default_weight = default_inputs$population,
+      adapted_input = inputs$crude_death,
+      adapted_weight = inputs$population
+    ),
+    crude_birth = compare_weighted_inputs(
+      default_input = default_inputs$crude_birth,
+      default_weight = default_inputs$N0,
+      adapted_input = inputs$crude_birth,
+      adapted_weight = inputs$N0
+    ),
+    mig_in = compare_weighted_inputs(
+      default_input = default_inputs$mig_in,
+      default_weight = default_inputs$N0,
+      adapted_input = inputs$mig_in,
+      adapted_weight = inputs$N0,
+      method = "sum"
+    ),
+    mig_dist = compare_weighted_inputs(
+      default_input = default_inputs$mig_dist,
+      default_weight = default_inputs$N0,
+      adapted_input = inputs$mig_dist,
+      adapted_weight = inputs$N0
+    ),
+    seeded = compare_weighted_inputs(
+      default_input = default_inputs$seeded,
+      default_weight = default_inputs$N0,
+      adapted_input = inputs$seeded,
+      adapted_weight = inputs$N0,
+      method = "sum"
+    )
+  )
+
 
   # ---- Return Packaged Parameters ----
   packed_params <- param_packager(
@@ -281,7 +345,8 @@ data_load_process_wrapper <- function(
     age_maternal_protection_ends = 1,
     protection_weight_vacc = 1,
     protection_weight_rec = 1,
-    migration_represent_current_pop = 1
+    migration_represent_current_pop = 1,
+    population = inputs$population
   )
 
   packed_params$input_data <- data.frame(

@@ -66,7 +66,7 @@ param_packager <- function(
     age_maternal_protection_ends = 1, repro_low = 1, repro_high = NULL,
     tt_migration = 0, migration_in_number = 0, migration_distribution_values = 0,
     migration_represent_current_pop = 0,
-    cfr_normal = 0, cfr_severe = 0
+    cfr_normal = 0, cfr_severe = 0, population
 ) {
 
   format_array <- function(x, dims) {
@@ -133,7 +133,8 @@ param_packager <- function(
     migration_distribution_values = format_array(migration_distribution_values, c(6, length(tt_migration))),
     migration_represent_current_pop = migration_represent_current_pop,
     cfr_normal = format_array(cfr_normal, n_age),
-    cfr_severe = format_array(cfr_severe, n_age)
+    cfr_severe = format_array(cfr_severe, n_age),
+    population = format_array(population, c(n_age, length(tt_migration)))
   )
 
   return(params)

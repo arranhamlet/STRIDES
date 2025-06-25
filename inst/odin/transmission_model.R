@@ -388,6 +388,9 @@ Npop_age[] <- sum(S_available[i, , ]) + sum(E_available[i, , ]) + sum(I_availabl
 
 dim(Npop_age) <- n_age
 
+update(death_rate) <- sum(Npop_background_death)/N
+initial(death_rate) <- 0
+
 #Calculate death rates
 Npop_background_death[, ] <- if(Npop_age_risk[i, j] <= 0) 0 else Binomial(Npop_age_risk[i, j], max(min(background_death[i, j], 1), 0))
 #Interpolate changes in death rate

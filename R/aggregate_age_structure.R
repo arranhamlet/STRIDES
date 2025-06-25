@@ -23,6 +23,8 @@ aggregate_age_structure <- function(obj,
                                     time_var = "dim4",
                                     tol = 1e-6) {
 
+  original <- obj
+
   method <- match.arg(method, c("sum", "mean", "weighted.mean", "rate"))
   full_ages <- 1:101
   age_group_index <- cut(full_ages, breaks = age_breaks + 1, right = FALSE, labels = FALSE)
@@ -115,7 +117,7 @@ aggregate_age_structure <- function(obj,
       plot_obj <- dplyr::bind_rows(original_check, aggregated_check) %>%
         ggplot2::ggplot(ggplot2::aes(x = !!sym(time_col), y = events, color = source,
                                      linetype = source), alpha = 0.5) +
-        ggplot2::geom_line(size = 1) +
+        ggplot2::geom_line(linewidth = 1) +
         ggplot2::theme_minimal() +
         ggplot2::labs(
           title = "Event Preservation Check (Rate Method)",
@@ -123,7 +125,6 @@ aggregate_age_structure <- function(obj,
         )
 
       print(plot_obj)
-      attr(out, "plot") <- plot_obj
 
     } else {
       # Weighted mean (simple proportional)

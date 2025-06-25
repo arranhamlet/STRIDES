@@ -43,7 +43,8 @@ param_packager(
   migration_distribution_values = 0,
   migration_represent_current_pop = 0,
   cfr_normal = 0,
-  cfr_severe = 0
+  cfr_severe = 0,
+  population
 )
 }
 \arguments{
