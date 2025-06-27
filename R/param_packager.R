@@ -66,7 +66,7 @@ param_packager <- function(
     age_maternal_protection_ends = 1, repro_low = 1, repro_high = NULL,
     tt_migration = 0, migration_in_number = 0, migration_distribution_values = 0,
     migration_represent_current_pop = 0,
-    cfr_normal = 0, cfr_severe = 0, population
+    cfr_normal = 0, cfr_severe = 0, population, new_age_breaks
 ) {
 
   format_array <- function(x, dims) {
@@ -85,6 +85,19 @@ param_packager <- function(
   dims_3d <- c(n_age, n_vacc, n_risk)
   dims_4d_vac <- c(n_age, n_vacc, n_risk, length(tt_vaccination_coverage))
   dims_4d_seed <- c(n_age, n_vacc, n_risk, length(tt_seeded))
+
+  # --- Reproductive weight vector (for accurate birth calculation) ---
+  if (n_age == 101) {
+    repro_weight <- rep(0, 101)
+    repro_weight[16:50] <- 1  # Ages 15–49 exactly
+  } else {
+    age_lowers <- new_age_breaks[-length(new_age_breaks)]
+    age_uppers <- new_age_breaks[-1]
+    repro_overlap <- pmin(age_uppers, 50) - pmax(age_lowers, 15)
+    repro_overlap[repro_overlap < 0] <- 0
+    repro_weight <- repro_overlap / (age_uppers - age_lowers)
+    repro_weight[] <- 1
+  }
 
   params <- list(
     n_age = n_age, n_vacc = n_vacc, n_risk = n_risk,
@@ -120,7 +133,7 @@ param_packager <- function(
     no_birth_changes = length(tt_birth_changes),
     tt_death_changes = tt_death_changes,
     no_death_changes = length(tt_death_changes),
-    crude_birth = format_array(crude_birth, c(n_risk, length(tt_birth_changes))),
+    crude_birth = format_array(crude_birth, c(n_age, length(tt_birth_changes))),
     crude_death = format_array(crude_death, c(n_age, n_risk, length(tt_death_changes))),
     protection_weight_vacc = protection_weight_vacc,
     protection_weight_rec = protection_weight_rec,
@@ -134,7 +147,8 @@ param_packager <- function(
     migration_represent_current_pop = migration_represent_current_pop,
     cfr_normal = format_array(cfr_normal, n_age),
     cfr_severe = format_array(cfr_severe, n_age),
-    population = format_array(population, c(n_age, length(tt_migration)))
+    population = format_array(population, c(n_age, length(tt_migration))),
+    repro_weight = repro_weight
   )
 
   return(params)

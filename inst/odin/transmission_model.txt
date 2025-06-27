@@ -401,23 +401,18 @@ death_int <- interpolate(tt_death_changes, crude_death, "constant")
 background_death[, ]<- if(simp_birth_death == 1) max(min(crude_death[i, j, 1], 1), 0) else max(min(death_int[i, j], 1), 0)
 
 #Calculate birth rates
-repro_weight <- parameter()
-dim(repro_weight) <- n_age
-
 #Reproductive population
-reproductive_population[] <- if(i >= repro_low && i <= repro_high) sum(S[i, , ]) * repro_weight[i] +
-  sum(E[i, , ]) * repro_weight[i] +
-  sum(I[i, , ]) * repro_weight[i] +
-  sum(R[i, , ]) * repro_weight[i] +
-  sum(Is[i, , ]) * repro_weight[i] +
-  sum(Rc[i, , ]) * repro_weight[i] else 0
+reproductive_population[] <- sum(S[repro_low:repro_high, , i]) +
+  sum(E[repro_low:repro_high, , i]) +
+  sum(I[repro_low:repro_high, , i]) +
+  sum(R[repro_low:repro_high, , i]) +
+  sum(Is[repro_low:repro_high, , i]) +
+  sum(Rc[repro_low:repro_high, , i])
 
 #Calculate birth rate
-birth_rate[] <- if(reproductive_population[i] <= 0) 0 else sum(Npop_background_death[i, ])/reproductive_population[i]
-
+birth_rate[] <- if(reproductive_population[i] <= 0) 0 else sum(Npop_background_death[, i])/reproductive_population[i]
 #Interpolate changes in birth rate
 birth_int <- interpolate(tt_birth_changes, crude_birth, "constant")
-
 #Calculate the number of births
 Births[] <-  if(reproductive_population[i] <= 0) 0 else if(simp_birth_death == 1) Binomial(reproductive_population[i], max(min( birth_rate[i]/2, 1), 0)) else Binomial(reproductive_population[i], max(min(birth_int[i]/2, 1), 0))
 
@@ -558,17 +553,17 @@ dim(vaccinating_out_of_Is) <- c(n_age, n_vacc, n_risk)
 dim(vaccinating_into_Rc) <- c(n_age, n_vacc, n_risk)
 dim(vaccinating_out_of_Rc) <- c(n_age, n_vacc, n_risk)
 
-dim(Births) <- n_age
-dim(reproductive_population) <- n_age
+dim(Births) <- n_risk
+dim(reproductive_population) <- n_risk
 dim(birth_rate) <- n_risk
 dim(tt_birth_changes) <- no_birth_changes
 dim(tt_death_changes) <- no_death_changes
 
 dim(background_death) <- c(n_age, n_risk)
 dim(Npop_background_death) <- c(n_age, n_risk)
-dim(crude_birth) <- c(n_age, no_birth_changes)
+dim(crude_birth) <- c(n_risk, no_birth_changes)
 dim(crude_death) <- c(n_age, n_risk, no_death_changes)
-dim(birth_int) <- n_age
+dim(birth_int) <- n_risk
 dim(death_int) <- c(n_age, n_risk)
 dim(S_death) <- c(n_age, n_vacc, n_risk)
 dim(E_death) <- c(n_age, n_vacc, n_risk)

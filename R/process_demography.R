@@ -106,16 +106,13 @@ process_demography <- function(
     setNames(c("dim1", "dim3", "value")) %>%
     mutate(dim2 = 1)
 
-  fert_mat <- fertility %>% select(all_of(fem_cols)) %>% as.matrix()
-  pop_fem <- population_female %>% select(all_of(fem_cols)) %>% as.matrix()
-  denom <- rowSums(pop_fem)
-  denom[denom == 0] <- NA
+  fert_mat <- fertility %>% select(all_of(fem_cols)) %>% as.data.frame()
 
-  fertility_by_year <- tibble(
-    dim1 = n_risk,
-    dim2 = time_all + 1,
-    value = pmin(rowSums((fert_mat / 1000) * pop_fem) / denom, 1)
-  )
+  fertility_by_year <- fert_mat %>%
+    rownames_to_column(var = "dim2") %>%
+    gather(key = "dim1", value = "value", -"dim2") %>%
+    #Add 1 to correct for the ages (start at 0)
+    mutate(dim1 = as.integer(gsub("x", "", dim1)) + 1)
 
   mig_rates <- migration[["migration_rate_1000"]]
 

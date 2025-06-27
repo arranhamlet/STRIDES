@@ -25,6 +25,9 @@ aggregate_age_structure <- function(obj,
 
   original <- obj
 
+  #Set the final one as inf to catch anything above it
+  age_breaks[length(age_breaks)] <- Inf
+
   method <- match.arg(method, c("sum", "mean", "weighted.mean", "rate"))
   full_ages <- 1:101
   age_group_index <- cut(full_ages, breaks = age_breaks + 1, right = FALSE, labels = FALSE)

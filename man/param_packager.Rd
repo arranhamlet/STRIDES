@@ -44,7 +44,8 @@ param_packager(
   migration_represent_current_pop = 0,
   cfr_normal = 0,
   cfr_severe = 0,
-  population
+  population,
+  new_age_breaks
 )
 }
 \arguments{

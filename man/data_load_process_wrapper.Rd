@@ -13,7 +13,9 @@ data_load_process_wrapper(
   year_start = "",
   year_end = "",
   WHO_seed_switch = FALSE,
-  aggregate_age = TRUE
+  aggregate_age = TRUE,
+  new_age_breaks = c(0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80,
+    Inf)
 )
 }
 \arguments{
