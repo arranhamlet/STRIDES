@@ -10,7 +10,7 @@ aggregate_age_structure(
   method = c("sum", "mean", "weighted.mean", "rate"),
   weights = NULL,
   time_var = "dim4",
-  tol = 1e-06
+  tol = 0.000001
 )
 }
 \arguments{

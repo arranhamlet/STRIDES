@@ -78,7 +78,6 @@ initial(dead_all) <- 0
 update(births_all) <- sum(Births)
 initial(births_all) <- 0
 
-
 #S sampling
 waning_R[, , ] <- if(R_after_aging[i, j, k] <= 0) 0 else Binomial(R_after_aging[i, j, k], max(min(natural_immunity_waning, 1), 0))
 waning_Rc[, , ] <- if(Rc_after_aging[i, j, k] <= 0) 0 else Binomial(Rc_after_aging[i, j, k], max(min(natural_immunity_waning, 1), 0))
@@ -98,7 +97,7 @@ recovered_Is_to_Rc[, , ] <- if(recovered_Is_to_R[i, j, k] - recovered_from_Is[i,
 
 # STEP 1: AGING - Apply aging
 # For S compartment
-aging_into_S[1, 1, ] <- Births[k]
+aging_into_S[1, 1, ] <- sum(Births)
 aging_into_S[2:n_age, , ] <- if(S[i - 1, j, k] <= 0) 0 else Binomial(S[i - 1, j, k], max(min(aging_rate[i-1], 1), 0))
 aging_out_of_S[1:(n_age - 1), , ] <- if(S[i, j, k] <= 0) 0 else Binomial(S[i, j, k], max(min(aging_rate[i], 1), 0))
 S_after_aging[, , ] <- S[i, j, k] + aging_into_S[i, j, k] - aging_out_of_S[i, j, k]
@@ -419,7 +418,7 @@ birth_rate[] <- if(reproductive_population[i] <= 0) 0 else sum(Npop_background_d
 birth_int <- interpolate(tt_birth_changes, crude_birth, "constant")
 
 #Calculate the number of births
-Births[] <-  if(reproductive_population[i] <= 0) 0 else if(simp_birth_death == 1) Binomial(reproductive_population[i], max(min( birth_rate[i]/2, 1), 0)) else Binomial(reproductive_population[i], max(min(birth_int[i]/2, 1), 0))
+Births[] <-  if(reproductive_population[i] <= 0) 0 else if(simp_birth_death == 1) Binomial(reproductive_population[i], max(min(birth_rate[i]/2, 1), 0)) else Binomial(reproductive_population[i], max(min(birth_int[i]/2, 1), 0))
 
 # Mothers who confer vaccine derived maternal antibodies
 vaccinated_mums[] <- if(n_vacc <= 1) 0 else sum(S[repro_low:repro_high, 2:n_vacc, i]) + sum(E[repro_low:repro_high, 2:n_vacc, i]) + sum(I[repro_low:repro_high, 2:n_vacc, i]) + sum(R[repro_low:repro_high, 2:n_vacc, i]) + sum(Is[repro_low:repro_high, 2:n_vacc, i]) + sum(Rc[repro_low:repro_high, 2:n_vacc, i])

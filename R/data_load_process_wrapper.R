@@ -191,19 +191,26 @@ data_load_process_wrapper <- function(
     mutate(time = as.integer(time),
            age = as.integer(age))
 
+  #Birth update to total population note female
+  crude_birth_augmented <- preprocessed$processed_demographic_data$crude_birth %>%
+    select(-population) %>%
+    left_join(preprocessed$processed_demographic_data$female_population %>% mutate(dim1 = as.integer(dim1)), by = c("dim1", "dim2")) %>%
+    mutate(value = value / (365 / time_factor))
+
   default_inputs <- list(
     age_beta_mod   = age_vaccination_beta_modifier,
     vacc_cov       = cv_params$vaccination_coverage,
     N0             = preprocessed$processed_demographic_data$N0,
     crude_death    = preprocessed$processed_demographic_data$crude_death %>% dplyr::mutate(value = value / (365 / time_factor)),
-    crude_birth    = preprocessed$processed_demographic_data$crude_birth %>%
-      mutate(value = value / (365 / time_factor)),
+    crude_birth    = crude_birth_augmented %>% mutate(value = value/population/1000),
     mig_in         = preprocessed$processed_demographic_data$migration_in_number %>% dplyr::mutate(value = value / (365 / time_factor)),
     mig_dist       = preprocessed$processed_demographic_data$migration_distribution_values,
     seeded         = seed_data,
     contact_matrix = preprocessed$processed_demographic_data$contact_matrix,
     population = weight_reformatted %>% dplyr::rename("dim1" = "age",
-                                                      "dim2" = "time")
+                                                      "dim2" = "time"),
+    female_population = preprocessed$processed_demographic_data$female_population %>%
+      rename(value = population)
   )
 
   if(aggregate_age) {
@@ -222,47 +229,53 @@ data_load_process_wrapper <- function(
     death_upd$value <- death_upd$value * weight_reformatted$value
 
     # ---- Aggregate Crude Birth with Population Weighting ----
-
-    # Step 1: Add fertility = crude_birth for ages 15–49 only
-    fertility_df <- preprocessed$processed_demographic_data$crude_birth %>%
-      dplyr::mutate(value = value / (365 / time_factor)) %>%
-      dplyr::left_join(weight_reformatted %>%
-                         mutate(time = as.character(time)), by = c("dim2" = "time", "dim1" = "age")) %>%
-      dplyr::mutate(
-        fertility = dplyr::if_else(dim1 >= 15 & dim1 <= 49, value.x, 0),
-        births = fertility * value.y
-      ) %>%
-      select(dim1, dim2, value = births)
-
     inputs <- list(
       age_beta_mod   = aggregate_inputs(age_vaccination_beta_modifier, weights = weight_reformatted, time_var = NULL),
       vacc_cov       = aggregate_inputs(cv_params$vaccination_coverage, weights = weight_reformatted),
       N0             = aggregate_inputs(preprocessed$processed_demographic_data$N0, method = "sum"),
       crude_death    = aggregate_inputs(death_upd, method = "sum"),
-      crude_birth    = aggregate_inputs(fertility_df, method = "sum", time_var = "dim2"),
-      mig_in         = aggregate_inputs(preprocessed$processed_demographic_data$migration_in_number %>% dplyr::mutate(value = value / (365 / time_factor)), method = "sum"),
+      crude_birth    = aggregate_inputs(crude_birth_augmented %>% select(-population), method = "sum", time_var = "dim2"),
+      mig_in         = aggregate_inputs(preprocessed$processed_demographic_data$migration_in_number %>% dplyr::mutate(value = value / (365 / time_factor)), method = "sum", time_var = "dim4"),
       mig_dist       = aggregate_inputs(preprocessed$processed_demographic_data$migration_distribution_values, weights = weight_reformatted, time_var = "dim2"),
-      seeded         = aggregate_inputs(seed_data, method = "sum"),
+      seeded         = aggregate_inputs(seed_data, method = "sum", time_var = "dim4"),
       contact_matrix = aggregate_contact_matrix(preprocessed$processed_demographic_data$contact_matrix, age_breaks = new_age_breaks, method = "sum"),
       population = aggregate_inputs(weight_reformatted %>% dplyr::rename("dim1" = "age",
                                                                   "dim2" = "time"),
-                                    time_var = "dim2", method = "sum")
+                                    time_var = "dim2", method = "sum"),
+      female_population = aggregate_inputs(preprocessed$processed_demographic_data$female_population %>% rename(value = population), time_var = "dim2", method = "sum")
     )
 
-    #Crude birth updated
+    #Crude updated
     crude_birth_updated <- inputs$crude_birth %>%
+      ungroup() %>%
+      select(-c(age_group)) %>%
       mutate(dim2 = as.numeric(dim2),
              dim1 = as.numeric(dim1)) %>%
-      arrange(dim1, dim2) %>%
+      group_by(dim1, dim2) %>%
+      left_join(
+        inputs$female_population %>%
+          mutate(dim2 = as.integer(as.numeric(dim2))) %>%
+          rename(population = value),
+        by = c("dim1", "dim2")
+      ) %>%
+      mutate(value = value/population/1000)
+
+    inputs$crude_birth <- crude_birth_updated
+
+    crude_death_updated <- inputs$crude_death %>%
+      mutate(dim3 = as.numeric(dim3),
+             dim2 = as.numeric(dim2),
+             dim1 = as.numeric(dim1)) %>%
+      arrange(dim1, dim2, dim3) %>%
       left_join(
         inputs$population %>%
+          ungroup() %>%
           select(dim1, dim2, population = value),
-        by = c("dim1", "dim2")
+        by = c("dim1", "dim3" = "dim2")
       ) %>%
       mutate(value = value/population)
 
-    inputs$crude_birth <- crude_birth_updated
-    inputs$crude_death$value <- inputs$crude_death$value / inputs$population$value
+    inputs$crude_death <- crude_death_updated
 
   } else {
     inputs <- default_inputs
@@ -325,6 +338,7 @@ data_load_process_wrapper <- function(
     protection_weight_rec = 0,
     migration_represent_current_pop = 1,
     population = inputs$population,
+    female_population = inputs$female_population,
     new_age_breaks = new_age_breaks
   )
 

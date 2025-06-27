@@ -108,11 +108,16 @@ process_demography <- function(
 
   fert_mat <- fertility %>% select(all_of(fem_cols)) %>% as.data.frame()
 
-  fertility_by_year <- fert_mat %>%
+  fem_mat <- population_female %>% select(all_of(fem_cols)) %>% as.data.frame() %>% rownames_to_column(var = "dim2") %>% gather(key = "dim1", value = "population", -"dim2") %>%
+    mutate(dim1 = as.integer(gsub("x", "", dim1)) + 1)
+
+  births_by_year <- fert_mat %>%
     rownames_to_column(var = "dim2") %>%
     gather(key = "dim1", value = "value", -"dim2") %>%
     #Add 1 to correct for the ages (start at 0)
-    mutate(dim1 = as.integer(gsub("x", "", dim1)) + 1)
+    mutate(dim1 = as.integer(gsub("x", "", dim1)) + 1) %>%
+    left_join(fem_mat, by = c("dim1", "dim2")) %>%
+    mutate(value = value * population)
 
   mig_rates <- migration[["migration_rate_1000"]]
 
@@ -156,12 +161,13 @@ process_demography <- function(
 
   list(
     N0 = N0_df,
-    crude_birth = fertility_by_year,
+    crude_birth = births_by_year,
     crude_death = mortality_df,
     tt_migration = time_all,
     migration_in_number = migration_in_number,
     migration_distribution_values = migration_distribution_values,
     population_data = pop_all,
+    female_population = fem_mat,
     contact_matrix = reformatted_contact_matrix,
     input_data = tibble(
       iso = iso,

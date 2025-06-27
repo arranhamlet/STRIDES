@@ -66,7 +66,7 @@ param_packager <- function(
     age_maternal_protection_ends = 1, repro_low = 1, repro_high = NULL,
     tt_migration = 0, migration_in_number = 0, migration_distribution_values = 0,
     migration_represent_current_pop = 0,
-    cfr_normal = 0, cfr_severe = 0, population, new_age_breaks
+    cfr_normal = 0, cfr_severe = 0, population, new_age_breaks, female_population
 ) {
 
   format_array <- function(x, dims) {
@@ -96,7 +96,6 @@ param_packager <- function(
     repro_overlap <- pmin(age_uppers, 50) - pmax(age_lowers, 15)
     repro_overlap[repro_overlap < 0] <- 0
     repro_weight <- repro_overlap / (age_uppers - age_lowers)
-    repro_weight[] <- 1
   }
 
   params <- list(
@@ -147,7 +146,8 @@ param_packager <- function(
     migration_represent_current_pop = migration_represent_current_pop,
     cfr_normal = format_array(cfr_normal, n_age),
     cfr_severe = format_array(cfr_severe, n_age),
-    population = format_array(population, c(n_age, length(tt_migration))),
+    population = format_array(population, c(n_age, length(tt_birth_changes))),
+    female_population = format_array(female_population, c(n_age, length(tt_birth_changes))),
     repro_weight = repro_weight
   )
 
