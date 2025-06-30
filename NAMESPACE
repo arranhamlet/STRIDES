@@ -2,7 +2,6 @@
 
 export("%>%")
 export(aggregate_age_structure)
-export(aggregate_contact_matrix)
 export(aggregate_model_output_by_time)
 export(compare_weighted_inputs)
 export(data_load_process_wrapper)
@@ -64,3 +63,4 @@ importFrom(tibble,tibble)
 importFrom(tidyr,expand_grid)
 importFrom(tidyr,pivot_longer)
 importFrom(tidyr,unnest)
+useDynLib(PREVAIL, .registration = TRUE)

@@ -2,29 +2,23 @@
 % Please edit documentation in R/aggregate_contact_matrix.R
 \name{aggregate_contact_matrix}
 \alias{aggregate_contact_matrix}
-\title{Aggregate a Square Contact Matrix to Custom Age Groups}
+\title{Aggregate a Square Contact Matrix Using Population Weights}
 \usage{
-aggregate_contact_matrix(
-  mat,
-  age_breaks,
-  weights = NULL,
-  method = c("weighted.mean", "sum")
-)
+aggregate_contact_matrix(mat, age_breaks, population, symmetric = TRUE)
 }
 \arguments{
-\item{mat}{A square numeric matrix where both rows and columns correspond to single-year ages (e.g., 0:100).}
+\item{mat}{Square matrix of contact rates (e.g., 101 x 101 for ages 0–100).}
 
-\item{age_breaks}{A numeric vector of age cut points (e.g. `c(0, 1, 5, 10, 15, 20, 30, 40, 50, 60, 70, 80, Inf)`).}
+\item{age_breaks}{Vector of age group cutpoints (e.g. c(0, 5, 10, ..., Inf)).}
 
-\item{weights}{Optional numeric vector of length equal to `nrow(mat)` (e.g., population by age).
-Required if `method = "weighted.mean"`.}
+\item{population}{Long-format data.frame with `time`, `age`, and `value` columns.}
 
-\item{method}{Aggregation method. One of `"weighted.mean"` (default) or `"sum"`.}
+\item{symmetric}{Logical; if TRUE, enforces reciprocity between age groups.}
 }
 \value{
-A square matrix of size `(length(age_breaks) - 1)` aggregated by age group.
+Aggregated square contact matrix (n_group x n_group).
 }
 \description{
-Aggregates a contact matrix (e.g., 101x101 for ages 0–100) into a smaller square matrix
-according to custom `age_breaks`. Optionally applies population weighting.
+Aggregates a contact matrix to custom age groups using the mean population over time
+as weights to preserve transmission dynamics.
 }

@@ -10,6 +10,7 @@
 #'
 #' @importFrom stats setNames
 #' @import magrittr
+#' @useDynLib PREVAIL, .registration = TRUE
 #' @keywords internal
 reformat_contact_matrix <- function(contact_matrix_raw, age_vector) {
 

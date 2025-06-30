@@ -359,6 +359,9 @@ dim(lambda_raw) <- n_age
 
 lambda[, , ] <- if(N <= 0) 0 else max(0, lambda_raw[i]) * (1 - age_vaccination_beta_modifier[i, j, k])
 
+update(lambda_out) <- sum(lambda)
+initial(lambda_out) <- 0
+
 # Calculate next-generation matrix elements
 ngm_unfolded[, , , ] <- S_available[i, k, l] * beta_updated[i, k, l] * infectious_period[i, k, l] * contact_matrix[i, j]
 dim(ngm_unfolded) <- c(n_age, n_age, n_vacc, n_risk)

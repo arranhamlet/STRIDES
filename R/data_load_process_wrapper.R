@@ -154,7 +154,7 @@ data_load_process_wrapper <- function(
                          subset(dim4 == 3) %>%
                          mutate(dim4 = 1)) %>%
       mutate(value = case_when(
-        dim4 == 1 & dim1 == 18 ~ 10,
+        dim4 == 1 & dim1 == 1 ~ 10,
         TRUE ~ value
       ))
 
@@ -173,7 +173,7 @@ data_load_process_wrapper <- function(
     times$seed <- c(min(times$seed), max(times$seed) + 1)
 
     seed_data <- data.frame(
-      dim1 = 18, dim2 = 1, dim3 = 1,
+      dim1 = 1, dim2 = 1, dim3 = 1,
       dim4 = 1:length(times$seed),
       value = seed_value
     )
@@ -238,7 +238,10 @@ data_load_process_wrapper <- function(
       mig_in         = aggregate_inputs(preprocessed$processed_demographic_data$migration_in_number %>% dplyr::mutate(value = value / (365 / time_factor)), method = "sum", time_var = "dim4"),
       mig_dist       = aggregate_inputs(preprocessed$processed_demographic_data$migration_distribution_values, weights = weight_reformatted, time_var = "dim2"),
       seeded         = aggregate_inputs(seed_data, method = "sum", time_var = "dim4"),
-      contact_matrix = aggregate_contact_matrix(preprocessed$processed_demographic_data$contact_matrix, age_breaks = new_age_breaks, method = "sum"),
+      # contact_matrix = aggregate_contact_matrix(preprocessed$processed_demographic_data$contact_matrix, age_breaks = new_age_breaks, weights = weight_reformatted, method = "weighted.mean"),
+      contact_matrix = aggregate_contact_matrix(
+        mat = preprocessed$processed_demographic_data$contact_matrix, age_breaks = new_age_breaks, population = weight_reformatted, symmetric = TRUE
+      ),
       population = aggregate_inputs(weight_reformatted %>% dplyr::rename("dim1" = "age",
                                                                   "dim2" = "time"),
                                     time_var = "dim2", method = "sum"),
