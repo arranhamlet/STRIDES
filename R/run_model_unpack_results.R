@@ -45,9 +45,9 @@ run_model_unpack_results <- function(odin_model, params, time = 1000, no_runs = 
       R = c("age", "vaccination", "risk", "time"),
       Is = c("age", "vaccination", "risk", "time"),
       Rc = c("age", "vaccination", "risk", "time"),
-      Reff_age_prop = c("age", "time"),
       Reff_age = c("age", "time"),
-      new_case = c("age", "vaccination", "risk", "time")
+      new_case = c("age", "vaccination", "risk", "time"),
+      seropositive = c("age", "time")
     )
   )
 

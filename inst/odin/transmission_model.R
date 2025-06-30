@@ -29,6 +29,13 @@ update(Rc[, , ]) <- max(Rc[i, j, k] + recovered_Is_to_Rc[i, j, k] - waning_Rc[i,
 
 #Additional outputs
 update(total_pop) <- N
+update(seropositive[]) <- (sum(I[i, , ]) + sum(Is[i, , ]) + sum(R[i, , ]) + sum(Rc[i, , ]))/N
+initial(seropositive[]) <- 0
+dim(seropositive) <- n_age
+
+# serosurvey <- data()
+# dim(serosurvey) <- n_age
+# serosurvey ~ seropositive
 
 # Entering and exiting compartments ---------------------------------------
 
@@ -359,9 +366,6 @@ dim(lambda_raw) <- n_age
 
 lambda[, , ] <- if(N <= 0) 0 else max(0, lambda_raw[i]) * (1 - age_vaccination_beta_modifier[i, j, k])
 
-update(lambda_out) <- sum(lambda)
-initial(lambda_out) <- 0
-
 # Calculate next-generation matrix elements
 ngm_unfolded[, , , ] <- S_available[i, k, l] * beta_updated[i, k, l] * infectious_period[i, k, l] * contact_matrix[i, j]
 dim(ngm_unfolded) <- c(n_age, n_age, n_vacc, n_risk)
@@ -372,10 +376,6 @@ dim(ngm) <- c(n_age)
 # Step 2: Collapse across i and j
 update(Reff) <- if(n_age <= 0) 0 else sum(ngm)/n_age
 initial(Reff) <- R0[1]
-
-update(Reff_age[]) <- ngm[i]
-initial(Reff_age[]) <- 0
-dim(Reff_age) <- n_age
 
 #Seeding
 t_seeded <- interpolate(tt_seeded, seeded, "constant")

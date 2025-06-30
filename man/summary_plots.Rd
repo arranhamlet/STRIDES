@@ -9,7 +9,7 @@ summary_plots(model_run, params)
 \arguments{
 \item{model_run}{A `data.frame` or `data.table` in long format, including columns `time`, `state`, `value`, `age`, `risk`, and `vaccination`.}
 
-\item{params}{A named list of model input parameters, including `n_age`, `timestep`, and `input_data$year_start`.}
+\item{params}{A named list of model input parameters, including `n_age`, `timestep`, and `input_data$year_start` and `input_data$age_breaks`.}
 }
 \value{
 A named list containing:

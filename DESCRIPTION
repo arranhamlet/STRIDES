@@ -41,5 +41,7 @@ LinkingTo:
     dust2, 
     monty
 RoxygenNote: 7.3.2
-Depends: 
+Depends:
     R (>= 3.5)
+
+    

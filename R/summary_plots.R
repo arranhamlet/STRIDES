@@ -6,14 +6,14 @@
 #' 3. A long-format data.table with stratified susceptibility proportions.
 #'
 #' @param model_run A `data.frame` or `data.table` in long format, including columns `time`, `state`, `value`, `age`, `risk`, and `vaccination`.
-#' @param params A named list of model input parameters, including `n_age`, `timestep`, and `input_data$year_start`.
+#' @param params A named list of model input parameters, including `n_age`, `timestep`, and `input_data$year_start` and `input_data$age_breaks`.
 #'
 #' @return A named list containing:
 #' \item{select_state_plot}{A `ggplot` object showing state dynamics over time.}
 #' \item{susceptibility_plot}{A `ggplot` object showing age-specific susceptibility in the latest year.}
 #' \item{susceptibility_data}{A `data.table` summarizing protection composition by age and year.}
 #'
-#' @importFrom data.table setDT fifelse
+#' @importFrom data.table setDT fifelse CJ
 #' @importFrom dplyr case_when
 #' @importFrom ggplot2 ggplot aes geom_line geom_bar facet_wrap scale_y_continuous labs theme_bw
 #' @export
@@ -21,11 +21,7 @@ summary_plots <- function(model_run, params) {
 
   year_start <- if (params$input_data$year_start == "") 1950 else params$input_data$year_start
   timestep <- params$input_data$timestep
-
-  age_groups <- if (params$n_age == 101) 0:100 else c(
-    "<1", "1–4", "5–9", "10–14", "15–19", "20–29",
-    "30–39", "40–49", "50–59", "60–69", "70–79", "80+"
-  )
+  age_groups <- as.numeric(unlist(strsplit(params$input_data$age_breaks, ";")))
 
   time_correct <- as.numeric(dplyr::case_when(
     timestep == "day"     ~ 1,
@@ -65,9 +61,9 @@ summary_plots <- function(model_run, params) {
   ][
     , year := year_start + floor(as.numeric(time) / (365 / time_correct))
   ][
-    order(time)  # ensure ordering before selecting the last value
+    order(time)
   ][
-    , .SD[.N], by = .(year, age, risk, vaccination, state)  # take the last row per group
+    , .SD[.N], by = .(year, age, risk, vaccination, state)
   ][
     , status := data.table::fifelse(state == "S" & vaccination == 1, "Susceptible",
                                     data.table::fifelse(state == "S" & vaccination > 1, "Vaccine protected",
@@ -83,8 +79,16 @@ summary_plots <- function(model_run, params) {
     , prop := value / sum(value), by = .(year, age)
   ]
 
-  age_group_map <- setNames(age_groups, as.character(seq_along(age_groups)))
-  susceptibility_data[, age_group_label := age_group_map[as.character(age)]]
+  # Create age group labels based on age index (1 = 0-5, etc.)
+  n_labels <- length(age_groups) - 1
+  age_group_labels <- paste0(
+    age_groups[-length(age_groups)],
+    "–",
+    age_groups[-1] - 1
+  )
+  age_group_labels[n_labels] <- paste0(age_groups[n_labels], "+")
+
+  susceptibility_data[, age_group_label := factor(age, levels = seq_len(n_labels), labels = age_group_labels)]
 
   select_state_plot <- ggplot2::ggplot(
     model_run_plot,

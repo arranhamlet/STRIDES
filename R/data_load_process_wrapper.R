@@ -346,15 +346,16 @@ data_load_process_wrapper <- function(
   )
 
   packed_params$input_data <- data.frame(
-    iso,
-    disease,
-    vaccine,
-    R0,
-    timestep ,
-    year_start,
-    year_end,
-    WHO_seed_switch,
-    aggregate_age
+    iso = iso,
+    disease = disease,
+    vaccine = vaccine,
+    R0 = R0,
+    timestep = timestep ,
+    year_start = year_start,
+    year_end = year_end,
+    WHO_seed_switch = WHO_seed_switch,
+    aggregate_age = aggregate_age,
+    age_breaks = if(aggregate_age == T) paste(new_age_breaks, collapse = ";") else paste(seq(1, n_age, by = 1), collapse = ";")
   )
 
   packed_params
