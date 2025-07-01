@@ -2,24 +2,21 @@
 % Please edit documentation in R/summary_plots.R
 \name{summary_plots}
 \alias{summary_plots}
-\title{Generate Summary Plots and Susceptibility Profiles}
+\title{Generate Summary Plots and Susceptibility Profiles (Optimized)}
 \usage{
 summary_plots(model_run, params)
 }
 \arguments{
 \item{model_run}{A `data.frame` or `data.table` in long format, including columns `time`, `state`, `value`, `age`, `risk`, and `vaccination`.}
 
-\item{params}{A named list of model input parameters, including `n_age`, `timestep`, and `input_data$year_start` and `input_data$age_breaks`.}
+\item{params}{A named list of model input parameters.}
 }
 \value{
-A named list containing:
-\item{select_state_plot}{A `ggplot` object showing state dynamics over time.}
-\item{susceptibility_plot}{A `ggplot` object showing age-specific susceptibility in the latest year.}
-\item{susceptibility_data}{A `data.table` summarizing protection composition by age and year.}
+A named list of ggplot objects and summary data.
 }
 \description{
 Processes model output and generates:
-1. A time-series plot of selected states.
-2. A stacked bar chart of age-specific susceptibility profiles.
+1. A time-series plot of selected states (weekly only).
+2. A stacked bar chart of age-specific susceptibility profiles (annual only).
 3. A long-format data.table with stratified susceptibility proportions.
 }
