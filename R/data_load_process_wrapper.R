@@ -301,6 +301,7 @@ data_load_process_wrapper <- function(
     repro_high <- max(which(age_lowers < 50 & age_uppers > 15))
   }
 
+  inputs$seeded$value <- 0
 
   # ---- Return Packaged Parameters ----
   packed_params <- param_packager(

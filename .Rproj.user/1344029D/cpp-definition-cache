@@ -40,26 +40,6 @@
                 "hidden": false
             },
             {
-                "usr": "c:@S@transmission_model@S@shared_state@S@odin_internals_type@S@transmission_model.cpp@5150",
-                "kind": 3,
-                "parent_name": "",
-                "name": "",
-                "file": "C:/Users/ah1114/Documents/Imperial/VPD_conflict/packages/PREVAIL/src/transmission_model.cpp",
-                "line": 59,
-                "column": 7,
-                "hidden": false
-            },
-            {
-                "usr": "c:@S@transmission_model@S@shared_state@S@odin_internals_type@S@transmission_model.cpp@5215",
-                "kind": 3,
-                "parent_name": "",
-                "name": "",
-                "file": "C:/Users/ah1114/Documents/Imperial/VPD_conflict/packages/PREVAIL/src/transmission_model.cpp",
-                "line": 62,
-                "column": 7,
-                "hidden": false
-            },
-            {
                 "usr": "c:@S@transmission_model@S@shared_state@S@dim_type",
                 "kind": 3,
                 "parent_name": "",

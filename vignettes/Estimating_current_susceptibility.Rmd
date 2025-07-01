@@ -1,0 +1,19 @@
+---
+title: "Estimating_current_susceptibility"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Estimating_current_susceptibility}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(PREVAIL)
+```
