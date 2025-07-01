@@ -4,7 +4,7 @@
 \alias{project_to_symmetric_doubly_stochastic}
 \title{Project Matrix to Symmetric Doubly Stochastic Form}
 \usage{
-project_to_symmetric_doubly_stochastic(mat, max_iter = 1000, tol = 0.00000001)
+project_to_symmetric_doubly_stochastic(mat, max_iter = 1000, tol = 1e-08)
 }
 \arguments{
 \item{mat}{A non-negative square matrix.}

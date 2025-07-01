@@ -170,3 +170,26 @@
 #' - comment: Notes or source details
 #' @source Literature estimates from peer-reviewed sources
 "disease_parameters"
+
+#' Country and Territory ISO3 Codes
+#'
+#' A reference dataset of countries and territories used within the PREVAIL package.
+#' This dataset links human-readable location names (e.g., "Kenya", "Occupied Palestinian Territory")
+#' to their corresponding ISO3 codes (e.g., "KEN", "PSE").
+#'
+#' This is typically used for mapping model inputs, internal datasets, and plotting functions to the correct
+#' country code format.
+#'
+#' @format A data frame with two columns:
+#' \describe{
+#'   \item{location}{A character vector containing country or territory names in English.}
+#'   \item{iso}{A 3-letter ISO 3166-1 alpha-3 code as a character vector.}
+#' }
+#'
+#' @examples
+#' head(PREVAIL_locations)
+#' PREVAIL_locations[PREVAIL_locations$iso == "KEN", ]
+#'
+#' @source Internal compilation for use within the PREVAIL framework
+"PREVAIL_locations"
+

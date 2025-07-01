@@ -23,20 +23,11 @@ summary_plots <- function(model_run, params) {
   timestep <- params$input_data$timestep
   age_groups <- as.numeric(unlist(strsplit(params$input_data$age_breaks, ";")))
 
-  time_correct <- as.numeric(dplyr::case_when(
-    timestep == "day"     ~ 1,
-    timestep == "week"    ~ 7,
-    timestep == "month"   ~ 30,
-    timestep == "quarter" ~ 91.25,
-    timestep == "year"    ~ 365,
-    TRUE                  ~ NA_real_
-  ))
-
   data.table::setDT(model_run)
 
   model_run_plot <- model_run[
     state %in% c("total_pop", "S", "E", "I", "R", "Is", "Rc", "new_case") &
-      age == "All" & time >= 365 / time_correct
+      age == "All" & time >= 365 / 1
   ][
     , state_plot := dplyr::case_when(
       state == "S" ~ "Susceptible",
@@ -59,7 +50,7 @@ summary_plots <- function(model_run, params) {
   susceptibility_data <- model_run[
     state %in% c("S", "E", "I", "R", "Is", "Rc") & age != "All"
   ][
-    , year := year_start + floor(as.numeric(time) / (365 / time_correct))
+    , year := year_start + floor(as.numeric(time) / (365 / 1))
   ][
     order(time)
   ][
@@ -92,7 +83,7 @@ summary_plots <- function(model_run, params) {
 
   select_state_plot <- ggplot2::ggplot(
     model_run_plot,
-    ggplot2::aes(x = time / (365 / time_correct) + year_start - 1, y = value)
+    ggplot2::aes(x = time / (365 / 1) + year_start - 1, y = value)
   ) +
     ggplot2::geom_line() +
     ggplot2::facet_wrap(~state_plot, scales = "free_y") +

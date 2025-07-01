@@ -3,9 +3,7 @@
 #' Initializes and runs a Dust model using a provided odin model and parameter set, then unpacks the simulation
 #' output into a long-format `data.table` using `unpack_dust2()`. Suitable for analysis and plotting.
 #'
-#' @param odin_model An unevaluated odin model function used to construct the dust system.
 #' @param params A named list of model parameters including `n_age`, `n_vacc`, `n_risk`, and `tt_migration`.
-#' @param time Integer. Total number of time steps to simulate (default is 1000). Time starts at 0.
 #' @param no_runs Integer. Number of stochastic particles to simulate (default is 10).
 #'
 #' @return A `data.table` in long format containing simulation results by state, time, and strata.
@@ -15,14 +13,14 @@
 #' to reshape the result. The output includes states such as `S`, `E`, `I`, `R`, `Is`, `Rc`, `new_case`, `Reff_age`, etc.
 #'
 #' @export
-run_model_unpack_results <- function(odin_model, params, time = 1000, no_runs = 10) {
+run_model_unpack_results <- function(params, no_runs = 10) {
 
   # Create and initialize the Dust system
-  sys <- dust2::dust_system_create(odin_model(), params, n_particles = no_runs)
+  sys <- dust2::dust_system_create(transmission_model(), params, n_particles = no_runs)
   dust2::dust_system_set_state_initial(sys)
 
   # Define simulation time vector (starts at 0)
-  full_time_vector <- 0:(time - 1)
+  full_time_vector <- 0:(ncol(params$population) * 365 - 1)
 
   # Run simulation
   y <- dust2::dust_system_simulate(sys, full_time_vector)

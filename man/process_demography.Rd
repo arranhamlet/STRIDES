@@ -20,49 +20,32 @@ process_demography(
 )
 }
 \arguments{
-\item{migration}{A data frame with net migration rates by year and country. Must include columns
-`iso3`, `year`, and `migration_rate_1000`.}
+\item{migration}{A data frame with net migration rates by year and country.}
 
-\item{fertility}{A data frame with fertility rates by single year of age (15–49) and year.
-Must include columns `iso3`, `year`, and `x15` to `x49`.}
+\item{fertility}{A data frame with fertility rates by single year of age (15–49) and year.}
 
-\item{mortality}{A data frame with mortality counts by single year of age (0–100) and year.
-Must include columns `iso3`, `year`, and `x0` to `x100`.}
+\item{mortality}{A data frame with mortality counts by single year of age (0–100) and year.}
 
-\item{population_all}{A data frame of total population counts by single year of age (0–100) and year.
-Must include columns `iso3`, `year`, and `x0` to `x100`.}
+\item{population_all}{A data frame of total population counts by single year of age (0–100) and year.}
 
-\item{population_female}{A data frame of female population counts by single year of age (15–49) and year.
-Must include columns `iso3`, `year`, and `x15` to `x49`.}
+\item{population_female}{A data frame of female population counts by single year of age (15–49) and year.}
 
-\item{contact_matricies}{A named list of 16x16 contact matrices by country ISO3 code. If a matrix for the
-specified country is not available, the mean of all provided matrices is used.}
+\item{contact_matricies}{A named list of 16x16 contact matrices by country ISO3 code.}
 
-\item{iso}{A three-letter ISO country code (character) used to subset the demographic inputs.}
+\item{iso}{A three-letter ISO country code.}
 
-\item{year_start}{First year to include (numeric or empty string ""). If `""`, uses earliest year in data.}
+\item{year_start}{First year to include.}
 
-\item{year_end}{Final year to include (numeric or empty string ""). If `""`, uses latest year in data.}
+\item{year_end}{Final year to include.}
 
-\item{n_age}{Integer. Number of collapsed age bins to use in the model (e.g., 16 for 5-year bins).}
+\item{n_age}{Number of collapsed age bins to use in the model.}
 
-\item{number_of_vaccines}{Integer. Number of vaccine doses considered. Determines number of strata.}
+\item{number_of_vaccines}{Number of vaccine doses considered.}
 
-\item{n_risk}{Integer. Number of risk strata in the model.}
+\item{n_risk}{Number of risk strata in the model.}
 }
 \value{
-A named list containing:
-\describe{
-  \item{N0}{Tibble of initial population counts by age, risk, and vaccination state for model time 0.}
-  \item{crude_birth}{Tibble of crude birth rates by time and risk.}
-  \item{crude_death}{Tibble of annual mortality rates by age.}
-  \item{tt_migration}{Vector of 0-indexed model time points corresponding to migration years.}
-  \item{migration_in_number}{Tibble of estimated net migration counts by time, age, and strata.}
-  \item{migration_distribution_values}{Tibble of ones across all time, for uniform migration distribution.}
-  \item{population_data}{Matrix of collapsed population counts by age and time (scaled to thousands).}
-  \item{contact_matrix}{Symmetric, doubly stochastic contact matrix matching collapsed age bins.}
-  \item{input_data}{Tibble summarizing the scenario metadata (country, years, stratification counts).}
-}
+A named list of processed demographic inputs.
 }
 \description{
 This function processes raw demographic data—covering migration, fertility, mortality,
@@ -70,13 +53,7 @@ population counts, and age-specific contact matrices—into a structured format 
 in an age-, vaccination-, and risk-structured infectious disease transmission model.
 }
 \details{
-The function uses tidyverse conventions (`dplyr`, `purrr`, `tidyr`) and assumes consistent
+The function uses tidyverse conventions and assumes consistent
 naming of age columns (e.g., `x0` to `x100` for all population counts).
-}
-\examples{
-# process_demography(migration, fertility, mortality, population_all, population_female,
-#                    contact_matricies, iso = "KEN", year_start = 2000, year_end = 2020,
-#                    n_age = 16, number_of_vaccines = 2, n_risk = 2)
-
 }
 \keyword{internal}

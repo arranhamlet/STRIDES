@@ -4,14 +4,10 @@
 \alias{run_model_unpack_results}
 \title{Run and Unpack Dust Model Simulation Results}
 \usage{
-run_model_unpack_results(odin_model, params, time = 1000, no_runs = 10)
+run_model_unpack_results(params, no_runs = 10)
 }
 \arguments{
-\item{odin_model}{An unevaluated odin model function used to construct the dust system.}
-
 \item{params}{A named list of model parameters including `n_age`, `n_vacc`, `n_risk`, and `tt_migration`.}
-
-\item{time}{Integer. Total number of time steps to simulate (default is 1000). Time starts at 0.}
 
 \item{no_runs}{Integer. Number of stochastic particles to simulate (default is 10).}
 }

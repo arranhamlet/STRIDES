@@ -1,5 +1,6 @@
 ---
-title: "Getting_started"
+title: "Getting Started with PREVAIL"
+author: "The PREVAIL Team"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Getting_started}
@@ -7,13 +8,138 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r setup, include = FALSE}
+## Load package when installed, or via devtools when developing
+if (requireNamespace("PREVAIL", quietly = TRUE)) {
+  library(PREVAIL)
+} else if (requireNamespace("devtools", quietly = TRUE)) {
+  devtools::load_all()
+
+  
+}
+
+# library(tidyverse)
+
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE
+)
+options(scipen = 999)
+```
+
+# Introduction
+
+Welcome to the `PREVAIL` package — **PRojection of Epidemics and VAccination Impact under Lapses in coverage** — a flexible framework for age-, risk-, and vaccination-stratified infectious disease modeling, tailored for crisis settings. This vignette walks through a basic end-to-end simulation using default package functions to load data, run a stochastic transmission model, and visualize results.
+
+In this vignette we will be using the default data included in the package. If you are interested in learning how to use your own data on [demography](), [vaccination](), or [infection dynamics]() please see the linked vignettes.
+
+The below example will run through a measles transmission model in Palestine ("PSE") using these prebuilt internal datasets and the transmission model implemented in [Odin](https://mrc-ide.github.io/odin2/).
+
+# 1. Install and load Required Packages
+
+First we need to install the **PREVAIL** package, which we install from github using the function `install_github()` from the **devtools** package.
+
+```{r, eval = FALSE}
+devtools::install_github("arranhamlet/PREVAIL")
+```
+
+Once installed, we can load in the required packages for this vignette. In addition to **PREVAIL**, we will also be using **tidyverse**. To load these, we will be using the **pacman** package, which will also install these packages if missing.
+
+```{r, eval = FALSE}
+#If pacman is not already present, install
+if(!require("pacman")) install.packages("pacman")
+
+#Install missing packages, and load 
+pacman::p_load(
+  PREVAIL,
+  tidyverse
+)
+
+```
+
+# 2. Load and Process Parameters
+
+To run our model, we need to first prepare our parameters. To do this, we use the function `data_load_process_wrapper()`. This function loads the data included in the package on demography, vaccination coverage, and disease dynamics. In order to run the model, we just need to specify a few arguments.
+
+* iso - The 3 letter country code that specifies which UN recognised country or territory we are interested in. This will determine our demography, vaccination coverage and prior disease exposure. For a full list please see `data(PREVAIL_locations)`. In this example we will use "PSE" for Palestine.
+* R0 - The basic reproductive number. This determines how many secondary infections we would expect to see from an initial infection. The higher the number, the more infectious the disease is.
+* year_start - The first year of data to input into the model. This determines the data to load into the model, and allows us to replicate historical patterns in demography, vaccination and infection. The range is from 1950 to 2023, and the default of "" uses the entire dataset.
+* year_end - The final year of data to input into the model. This determines the data to load into the model, and allows us to replicate historical patterns in demography, vaccination and infection. The range is from 1950 to 2023, and the default of "" uses the entire dataset. This must be equal to or larger than `year_start = .`
+* WHO_seed_switch - If FALSE, the model allows for dynamic disease transmission throughout the entire period. If TRUE, the model allows for dynamic disease transmission prior to 1980 (when WHO cases are not available), but from 1980 onwards, it matches annual cases to the number reported to the WHO. This allows the user to replicate reported cases.
+* aggregate_age - If TRUE, the model aggregates the baseline single year age groups of 0-100, to the values specified in `new_age_breaks = `.
+* new_age_breaks - The age breaks to aggregate to if `aggregate_age = TRUE`.
+
+
+```{r, eval = FALSE}
+params <- data_load_process_wrapper(
+  # Specify the country or territory using its ISO3 code.
+  # This determines demography, vaccination coverage, and prior infection.
+  iso = "PSE",  # Palestine
+
+  # The disease of interest; used to match internal schedules and parameters.
+  disease = "measles",
+
+  # Basic reproductive number; governs overall infectiousness.
+  R0 = 15,
+
+  # Start year of historical data input (1950–2023).
+  # Set to "" to use the full dataset range.
+  year_start = "",
+
+  # End year of historical data input (1950–2023).
+  # Must be equal to or after year_start.
+  year_end = "",
+
+  # If TRUE, uses WHO-reported annual case data from 1980 onward to seed the model.
+  # If FALSE, allows fully dynamic transmission throughout.
+  WHO_seed_switch = TRUE,
+
+  # Whether to aggregate single-year age groups (0–100) into larger age bands.
+  aggregate_age = TRUE,
+
+  # The age group cut points to use if aggregating age groups.
+  new_age_breaks = c(0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, Inf)
+)
+
+```
+
+The output of this function is a list of the parameters required to run the mathematical model of disease transmission. 
+
+# 3. Run the Model
+
+One we have generated our parameters, we can use the function `run_model_unpack_results()` to run the model using our previously generated parameters. This function will run our model for a defined l
+
+This function takes three arguments.
+
+* 
+
+```{r, eval = FALSE}
+model_run <- run_model_unpack_results(
+  params,
+  no_runs = 1
 )
 ```
 
-```{r setup}
-library(PREVAIL)
+# 5. Visualize the Results
+
+```{r, eval = FALSE}
+plots <- summary_plots(
+  model_run = model_run,
+  params = params
+)
+
+plots$select_state_plot
+plots$susceptibility_plot
 ```
+
+# Conclusion
+
+This basic walkthrough provides a streamlined introduction to the PREVAIL modeling workflow. From loading data to running simulations and plotting results, the package is designed to be:
+
+- **Modular**: Each function can be called independently
+- **Customizable**: Accepts user-defined parameters or defaults
+- **Crisis-focused**: Tailored for age-, vaccine-, and risk-structured models in humanitarian settings
+
+For more advanced use cases and customization, see the full function reference (`?data_load_process_wrapper`, etc.) or explore other vignettes.

@@ -7,12 +7,10 @@
 data_load_process_wrapper(
   iso,
   disease,
-  vaccine,
   R0,
-  timestep = "day",
   year_start = "",
   year_end = "",
-  WHO_seed_switch = FALSE,
+  WHO_seed_switch = TRUE,
   aggregate_age = TRUE,
   new_age_breaks = c(0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80,
     Inf)
@@ -23,11 +21,7 @@ data_load_process_wrapper(
 
 \item{disease}{Name of the disease (e.g., "measles").}
 
-\item{vaccine}{Vaccine name or substring to match in schedule and data.}
-
 \item{R0}{A numeric value or vector specifying the basic reproduction number.}
-
-\item{timestep}{One of "day", "week", "month", "quarter", or "year".}
 
 \item{year_start}{Optional. Start year for simulation window.}
 
