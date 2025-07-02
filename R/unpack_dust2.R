@@ -42,7 +42,7 @@ unpack_dust2 <- function(model_system, model_object, dimension_names, which_stat
         data.table::data.table(
           run = paste0("run_", seq_len(n_particles)),
           value = as.numeric(this_obj),
-          time = time_vector,
+          time = rep(time_vector, each = n_particles),
           state = state_name
         )
       } else {

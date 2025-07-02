@@ -47,7 +47,8 @@ run_model_unpack_results <- function(params, no_runs = 10) {
       new_case = c("age", "vaccination", "risk", "time"),
       seropositive = c("age", "time")
     )
-  )
+  ) %>%
+    dplyr::filter(time <= max(full_time_vector))
 
   return(clean_df)
 }

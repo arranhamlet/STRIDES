@@ -246,7 +246,7 @@ data_load_process_wrapper <- function(
     age_breaks       = if (aggregate_age) {
       paste(new_age_breaks, collapse = ";")
     } else {
-      paste(seq(1, n_age), collapse = ";")
+      paste(seq(1, 101), collapse = ";")
     }
   )
 

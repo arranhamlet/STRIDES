@@ -45,7 +45,7 @@ summary_plots <- function(model_run, params) {
   ))]
 
   # Collapse summarisation
-  summary_plot_data <- collapse::fgroup_by(model_run_plot, time, state_plot) |>
+  summary_plot_data <- collapse::fgroup_by(model_run_plot, time, state_plot) %>%
     collapse::fsummarise(
       median = collapse::fquantile(value, 0.5),
       lower  = collapse::fquantile(value, 0.025),
@@ -85,8 +85,10 @@ summary_plots <- function(model_run, params) {
   # Plot: State dynamics
   plot_data <- summary_plot_data[time > 365]
   select_state_plot <- ggplot2::ggplot(plot_data,
-                                       ggplot2::aes(x = time / 365 + year_start - 1, y = median)) +
+                                       ggplot2::aes(x = time / 365 + year_start - 1,
+                                                    y = median, ymin = lower, ymax = upper)) +
     ggplot2::geom_line() +
+    ggplot2::geom_ribbon(alpha = 0.5) +
     ggplot2::facet_wrap(~state_plot, scales = "free_y") +
     ggplot2::scale_y_continuous(labels = scales::comma) +
     ggplot2::theme_bw() +

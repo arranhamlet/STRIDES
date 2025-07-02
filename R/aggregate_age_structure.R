@@ -15,7 +15,7 @@
 #' @importFrom dplyr group_by summarise mutate left_join rename select across
 #' @importFrom data.table first
 #' @importFrom ggplot2 ggplot aes geom_line theme_minimal labs
-#' @export
+#' @keywords internal
 aggregate_age_structure <- function(obj,
                                     age_breaks,
                                     method = c("sum", "mean", "weighted.mean", "rate"),

@@ -29,7 +29,7 @@ update(Rc[, , ]) <- max(Rc[i, j, k] + recovered_Is_to_Rc[i, j, k] - waning_Rc[i,
 
 #Additional outputs
 update(total_pop) <- N
-update(seropositive[]) <- (sum(I[i, , ]) + sum(Is[i, , ]) + sum(R[i, , ]) + sum(Rc[i, , ]))/N
+update(seropositive[]) <- (sum(S[, 2:n_vacc, ]) + sum(I[i, , ]) + sum(Is[i, , ]) + sum(R[i, , ]) + sum(Rc[i, , ]))/N
 initial(seropositive[]) <- 0
 dim(seropositive) <- n_age
 
@@ -78,12 +78,6 @@ I_death[, , ] <- if(I_available[i, j, k] <= 0) 0 else Binomial(I_available[i, j,
 R_death[, , ] <- if(R_available[i, j, k] <= 0) 0 else Binomial(R_available[i, j, k], max(min(background_death[i, k], 1), 0))
 Is_death[, , ] <- if(Is_available[i, j, k] <= 0) 0 else Binomial(Is_available[i, j, k], max(min(background_death[i, k], 1), 0) + max(cfr_severe[i], 0))
 Rc_death[, , ] <- if(Rc_available[i, j, k] <= 0) 0 else Binomial(Rc_available[i, j, k], max(min(background_death[i, k], 1), 0))
-
-update(dead_all) <- sum(S_death) + sum(E_death) + sum(I_death) + sum(R_death) + sum(Is_death) + sum(Rc_death)
-initial(dead_all) <- 0
-
-update(births_all) <- sum(Births)
-initial(births_all) <- 0
 
 #S sampling
 waning_R[, , ] <- if(R_after_aging[i, j, k] <= 0) 0 else Binomial(R_after_aging[i, j, k], max(min(natural_immunity_waning, 1), 0))
@@ -389,9 +383,6 @@ Npop_age_risk[, ] <- sum(S[i, , j]) + sum(E[i, , j]) + sum(I[i, , j]) + sum(R[i,
 Npop_age[] <- sum(S_available[i, , ]) + sum(E_available[i, , ]) + sum(I_available[i, , ]) + sum(R_available[i, , ]) + sum(Is_available[i, , ]) + sum(Rc_available[i, , ])
 
 dim(Npop_age) <- n_age
-
-update(death_rate) <- sum(Npop_background_death)/N
-initial(death_rate) <- 0
 
 #Calculate death rates
 Npop_background_death[, ] <- if(Npop_age_risk[i, j] <= 0) 0 else Binomial(Npop_age_risk[i, j], max(min(background_death[i, j], 1), 0))

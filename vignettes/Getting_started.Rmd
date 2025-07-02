@@ -117,14 +117,14 @@ The output of this function is a list of the parameters required to run the math
 
 One we have generated our parameters, we can use the function `run_model_unpack_results()` to run the model using our previously generated parameters.
 
-This function takes two arguments, the parameters we have previously generated `params`, and the `no_runs` which specifies the number of stochastic runs we want the model to run. This allows us to account for the randomness that is inherent in disease transmission. Increasing the number of runs also increases the length of time it takes, so you should choose a value that balances speed with certainty.
+This function takes two arguments, the parameters we have previously generated `params`, and the `no_runs` which specifies the number of stochastic runs we want the model to run. Running the model multiple times helps account for the inherent randomness in disease transmission. However, increasing the number of runs also increases computation time. For large populations (e.g., over one million), results tend to be stable across runs, so a smaller number of simulations is often sufficient. In contrast, smaller populations (e.g., a few thousand) may require more runs to capture variability in outcomes.
 
-Here we will look at three runs of the model.
+Here we will look at a single run of the model.
 
 ```{r, eval = FALSE}
 model_run <- run_model_unpack_results(
   params = params,
-  no_runs = 3
+  no_runs = 1
 )
 ```
 
@@ -141,6 +141,9 @@ plots <- summary_plots(
 plots$select_state_plot
 plots$susceptibility_plot
 ```
+
+The first plot will depict the six compartments of the model over time, the 
+
 
 # Conclusion
 

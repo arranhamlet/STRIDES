@@ -33,3 +33,4 @@ A data frame with aggregated dim1 values. If method = "rate", a plot is attached
 Aggregates a long-format data frame with an age dimension (dim1) into custom age groups.
 Supports sum, mean, weighted.mean, and rate-based aggregation with optional plotting check.
 }
+\keyword{internal}

@@ -17,6 +17,7 @@
 #' @importFrom data.table as.data.table setnames setcolorder
 #' @keywords internal
 process_obj <- function(this_obj, present_dimensions, colnames, time_length, x, model_system, dimension_names, dust_state) {
+
   state_name <- names(dust_state)[x]
   has_particles <- model_system$n_particles > 1
   obj_dims <- length(dim(this_obj))
@@ -44,6 +45,7 @@ process_obj <- function(this_obj, present_dimensions, colnames, time_length, x, 
     # For multi-particle or higher-dimensional models
     data.table::setnames(melted_df, c(colnames[1:(which(colnames == "time") - 1)], "run", "time", "value"))
     melted_df[, state := state_name]
+    melted_df[, time := as.numeric(time)]
     data.table::setcolorder(melted_df, c("time", "state", colnames[1:(which(colnames == "time") - 1)], "run", "value"))
     aggregate_df <- melted_df[, .(value = sum(value)), by = .(state, time, run)]
   } else {
