@@ -128,7 +128,32 @@ model_run <- run_model_unpack_results(
 )
 ```
 
-# 5. Visualize the Results
+# 4. Check our model outputs
+
+Once run, we can quickly look to see if the model has accurately captured the total population, and the end age breakdowns over time. This is a useful check to make sure we are going to be accurately capturing the effects of historical vaccination and infection on our current population.
+
+To do this we use the function `demographic_check()` which will produce two plots. 
+
+1) The total population over time from our model and a reference population.
+2) The number of individuals by age from our model and a reference population for the final year of the simulation.
+
+This function takes three arguments:
+
+**reference_population** - The population we want to compare our model results to. This is provided by our `data_load_process_wrapper()` function and can be extracted in our vignette through `params$population`. This must match the age compartments found in the model.
+
+**model_run** - The output of `run_model_unpack_results()`.
+
+**age_breaks** - A numeric vector of age group breakpoints (e.g., `c(0, 5, 10, ..., 80, Inf)`). Found in `params$input_data$age_breaks`.
+
+```{r, eval = FALSE}
+#Check demographics
+demographic_check <- demographic_check(
+  reference_population = params$population * 1000,
+  model_run = model_run,
+  age_breaks = params$input_data$age_breaks
+)
+```
+
 
 Once run, we can quickly visualise the model results using the function `summary_plots()` which will product two plots and a data.frame of the susceptibility of the population by age and year.
 

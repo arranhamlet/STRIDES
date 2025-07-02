@@ -8,9 +8,9 @@
 #'
 #' @param reference_population A matrix or data frame of reference population data,
 #'   where each column is a year and each row is an age group. Values should be in thousands.
-#'   Provided by `data_load_process_wrapper()`.
+#'   Typically from \code{\link{data_load_process_wrapper}}.
 #' @param model_run A data frame of stratified model output,
-#'   including `time`, `age`, `state`, `value`, `vaccination`, and `risk`. Typically from `summary_plots()`.
+#'   including `time`, `age`, `state`, `value`, `vaccination`, and `risk`. Typically from \code{\link{summary_plots}}.
 #' @param age_breaks A numeric vector of age group breakpoints (e.g., `c(0, 5, 10, ..., 80, Inf)`).
 #'
 #' @return A named list with:
@@ -19,11 +19,13 @@
 #'   \item{age_breakdown_plot}{A `ggplot` object comparing age distribution in the final year.}
 #' }
 #'
+#' @seealso \code{\link{age_breaks_to_labels}} for converting age breaks to labels.
+#'
 #' @importFrom collapse fgroup_by fsummarise fsum
 #' @importFrom dplyr filter mutate case_when group_by slice ungroup bind_rows
 #' @importFrom tidyr pivot_longer
 #' @importFrom ggplot2 ggplot aes geom_line geom_bar labs theme_bw scale_y_continuous position_dodge theme
-#' @importFrom scales comma percent_format
+#' @importFrom scales comma
 #' @export
 demographic_check <- function(reference_population,
                               model_run,
@@ -34,13 +36,13 @@ demographic_check <- function(reference_population,
   # -------------------------
   population_aggregate <- model_run %>%
     subset(state %in% c("S", "E", "I", "R", "Is", "Rc") & age != "All") %>%
-    mutate(year = time %/% 365) %>%
-    group_by(state, year, age, vaccination, risk) %>%
-    slice(which.max(time)) %>%
-    ungroup() %>%
+    dplyr::mutate(year = time %/% 365) %>%
+    dplyr::group_by(state, year, age, vaccination, risk) %>%
+    dplyr::slice(which.max(time)) %>%
+    dplyr::ungroup() %>%
     collapse::fgroup_by(year, age) %>%
     collapse::fsummarise(value = collapse::fsum(value)) %>%
-    mutate(age = as.numeric(age))
+    dplyr::mutate(age = as.numeric(age))
 
   # Assign age group labels
   age_groups <- age_breaks_to_labels(paste(age_breaks, collapse = ";"))
@@ -62,9 +64,9 @@ demographic_check <- function(reference_population,
     dplyr::filter(reference != 0) %>%
     tidyr::pivot_longer(cols = c("reference", "model"),
                         names_to = "label", values_to = "value") %>%
-    mutate(
+    dplyr::mutate(
       year = as.numeric(year),
-      label = case_when(
+      label = dplyr::case_when(
         label == "reference" ~ "Population reference",
         label == "model" ~ "Model estimate"
       )
@@ -75,13 +77,12 @@ demographic_check <- function(reference_population,
   # -------------------------
   population_plot <- ggplot2::ggplot(
     data = population_comparison,
-    mapping = aes(x = year, y = value, group = label, fill = label)
+    mapping = ggplot2::aes(x = year, y = value, group = label, color = label)
   ) +
-    geom_line(aes(color = label), show.legend = TRUE) +  # add color here for line, but map fill too
-    theme_bw() +
-    labs(x = "Year", y = "Population", fill = "", color = "") +
-    scale_y_continuous(labels = comma)
-
+    ggplot2::geom_line(linewidth = 1, show.legend = TRUE) +
+    ggplot2::theme_bw() +
+    ggplot2::labs(x = "Year", y = "Population", color = "") +
+    ggplot2::scale_y_continuous(labels = scales::comma)
 
   # -------------------------
   # Final year age breakdown
@@ -89,10 +90,10 @@ demographic_check <- function(reference_population,
   final_year <- max(population_aggregate$year)
 
   final_year_age_model <- population_aggregate %>%
-    filter(year == final_year) %>%
+    dplyr::filter(year == final_year) %>%
     collapse::fgroup_by(age_group) %>%
     collapse::fsummarise(value = collapse::fsum(value)) %>%
-    mutate(label = "Model estimate")
+    dplyr::mutate(label = "Model estimate")
 
   clean_reference <- reference_population[, colSums(reference_population != 0) > 0]
 
@@ -102,21 +103,21 @@ demographic_check <- function(reference_population,
     label = "Population reference"
   )
 
-  final_age <- bind_rows(final_year_age_model, final_year_age_reference) %>%
-    group_by(label) %>%
-    mutate(prop = value / sum(value))
+  final_age <- dplyr::bind_rows(final_year_age_model, final_year_age_reference) %>%
+    dplyr::group_by(label) %>%
+    dplyr::mutate(prop = value / sum(value))
 
   # -------------------------
   # Plot: age structure in final year
   # -------------------------
   age_breakdown_plot <- ggplot2::ggplot(
     data = final_age,
-    mapping = aes(x = age_group, y = prop * 100, fill = label)
+    mapping = ggplot2::aes(x = age_group, y = prop * 100, color = label)
   ) +
-    geom_bar(stat = "identity", position = position_dodge(), show.legend = TRUE) +
-    theme_bw() +
-    labs(x = "Age group", y = "Percent of population", fill = "") +
-    scale_y_continuous(labels = comma)
+    ggplot2::geom_col(position = ggplot2::position_dodge(), fill = NA, linewidth = 1, show.legend = TRUE) +
+    ggplot2::theme_bw() +
+    ggplot2::labs(x = "Age group", y = "Percent of population", color = "") +
+    ggplot2::scale_y_continuous(labels = scales::comma)
 
   # -------------------------
   # Return plots
