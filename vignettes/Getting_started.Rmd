@@ -163,11 +163,20 @@ plots <- summary_plots(
   params = params
 )
 
-plots$select_state_plot
-plots$susceptibility_plot
 ```
 
-The first plot will depict the six compartments of the model over time, the 
+The first plot will depict the six compartments of the model, the total population, and the cases.
+
+plots$select_state_plot
+
+The second plot will show the susceptibility of the population at the final timepoint.
+
+
+
+
+
+
+
 
 
 # Conclusion

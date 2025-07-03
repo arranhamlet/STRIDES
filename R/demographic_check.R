@@ -24,6 +24,7 @@
 #' @importFrom collapse fgroup_by fsummarise fsum
 #' @importFrom dplyr filter mutate case_when group_by slice ungroup bind_rows
 #' @importFrom tidyr pivot_longer
+#' @importFrom scales comma
 #' @importFrom ggplot2 ggplot aes geom_line geom_bar labs theme_bw scale_y_continuous position_dodge theme
 #' @importFrom scales comma
 #' @export
@@ -82,7 +83,8 @@ demographic_check <- function(reference_population,
     ggplot2::geom_line(linewidth = 1, show.legend = TRUE) +
     ggplot2::theme_bw() +
     ggplot2::labs(x = "Year", y = "Population", color = "") +
-    ggplot2::scale_y_continuous(labels = scales::comma)
+    ggplot2::scale_y_continuous(labels = scales::comma) +
+    ggplot2::scale_x_continuous(breaks = scales::breaks_pretty())
 
   # -------------------------
   # Final year age breakdown
@@ -112,11 +114,11 @@ demographic_check <- function(reference_population,
   # -------------------------
   age_breakdown_plot <- ggplot2::ggplot(
     data = final_age,
-    mapping = ggplot2::aes(x = age_group, y = prop * 100, color = label)
+    mapping = ggplot2::aes(x = age_group, y = prop * 100, fill = label)
   ) +
-    ggplot2::geom_col(position = ggplot2::position_dodge(), fill = NA, linewidth = 1, show.legend = TRUE) +
+    ggplot2::geom_col(position = ggplot2::position_dodge(), linewidth = 1, show.legend = TRUE) +
     ggplot2::theme_bw() +
-    ggplot2::labs(x = "Age group", y = "Percent of population", color = "") +
+    ggplot2::labs(x = "Age group", y = "Percent of population", fill = "") +
     ggplot2::scale_y_continuous(labels = scales::comma)
 
   # -------------------------

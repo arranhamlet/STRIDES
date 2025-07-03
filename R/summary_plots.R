@@ -11,6 +11,7 @@
 #' @return A named list of ggplot objects and summary data.
 #'
 #' @importFrom data.table setDT fifelse fcase
+#' @importFrom scales comma breaks_pretty
 #' @importFrom collapse fgroup_by fsummarise fquantile
 #' @importFrom ggplot2 ggplot aes geom_line geom_bar facet_wrap scale_y_continuous labs theme_bw
 #' @export
@@ -83,7 +84,7 @@ summary_plots <- function(model_run, params) {
   susceptibility_data[, age_group_label := factor(age, levels = seq_len(n_labels), labels = age_group_labels)]
 
   # Plot: State dynamics
-  plot_data <- summary_plot_data[time > 365]
+  plot_data <- summary_plot_data
   select_state_plot <- ggplot2::ggplot(plot_data,
                                        ggplot2::aes(x = time / 365 + year_start - 1,
                                                     y = median, ymin = lower, ymax = upper)) +
@@ -92,7 +93,8 @@ summary_plots <- function(model_run, params) {
     ggplot2::facet_wrap(~state_plot, scales = "free_y") +
     ggplot2::scale_y_continuous(labels = scales::comma) +
     ggplot2::theme_bw() +
-    ggplot2::labs(x = "", y = "")
+    ggplot2::labs(x = "", y = "") +
+    ggplot2::scale_x_continuous(breaks = scales::breaks_pretty())
 
   # Plot: Susceptibility bar chart
   latest_year <- max(susceptibility_data$year)

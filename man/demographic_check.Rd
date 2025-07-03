@@ -9,10 +9,10 @@ demographic_check(reference_population, model_run, age_breaks)
 \arguments{
 \item{reference_population}{A matrix or data frame of reference population data,
 where each column is a year and each row is an age group. Values should be in thousands.
-Provided by `data_load_process_wrapper()`.}
+Typically from \code{\link{data_load_process_wrapper}}.}
 
 \item{model_run}{A data frame of stratified model output,
-including `time`, `age`, `state`, `value`, `vaccination`, and `risk`. Typically from `summary_plots()`.}
+including `time`, `age`, `state`, `value`, `vaccination`, and `risk`. Typically from \code{\link{summary_plots}}.}
 
 \item{age_breaks}{A numeric vector of age group breakpoints (e.g., `c(0, 5, 10, ..., 80, Inf)`).}
 }
@@ -30,4 +30,7 @@ UN World Population Prospects (reference population) data. It returns:
 \details{
 1. A line plot comparing total population over time.
 2. A bar plot comparing the age distribution in the final year.
+}
+\seealso{
+\code{\link{age_breaks_to_labels}} for converting age breaks to labels.
 }
