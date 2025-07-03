@@ -63,13 +63,13 @@ summary_plots <- function(model_run, params) {
   ][
     , status := data.table::fcase(
       state == "S" & vaccination == 1, "Susceptible",
-      state == "S", "Vaccine protected",
-      vaccination == 1, "Exposure protected",
-      default = "Vaccine and exposure protected"
+      state == "S", "Vaccine derived protection",
+      vaccination == 1, "Infection derived protection",
+      default = "Vaccine and infection derived protection"
     )
   ][
     , status := factor(status, levels = c(
-      "Susceptible", "Vaccine protected", "Exposure protected", "Vaccine and exposure protected"
+      "Susceptible", "Vaccine derived protection", "Infection derived protection", "Vaccine and infection derived protection"
     ))
   ][
     , .(value = sum(value, na.rm = TRUE)), by = .(year, age, risk, vaccination, status)

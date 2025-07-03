@@ -36,7 +36,7 @@ prepare_future_data <- function(params, future_events, current_susceptibility) {
   )
 
   for (i in seq_len(n_future)) {
-    vacc_array[, , , i] <- vacc_array[, , , i] * future_events$relative_coverage[i]
+    vacc_array[, , , i] <- pmin(vacc_array[, , , i] * future_events$relative_coverage[i], 1)
   }
 
   new_params$vaccination_coverage <- vacc_array

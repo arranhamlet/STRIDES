@@ -167,11 +167,71 @@ plots <- summary_plots(
 
 The first plot will depict the six compartments of the model, the total population, and the cases.
 
-plots$select_state_plot
+The second plot will show the susceptibility of the population at the final timepoint. This shows the proportion of each age group in one of five susceptibility labels.
 
-The second plot will show the susceptibility of the population at the final timepoint.
+1) **Susceptible** - Those who have not been exposed to vaccination or infection.
+2) **Vaccine derived protection** - Those who have been exposed to vaccination but not infection.
+3) **Infection derived protection** - Those who have been exposed to infection but not vaccination.
+4) **Vaccine and infection derived protection** - Those who have been exposed to both infection and vaccination.
 
+# 5. Calculate current susceptibility and prepare for onward projections.
 
+Once we are satisfied with our model outputs, we can calculate the susceptibility of the population at the final timepoint. This will be used to establish a baseline population-level susceptibility for our onward projections. This is done using `current_susceptibility()`, which uses the output of `run_model_unpack_results()`.
+
+```{r, eval = FALSE}
+#Process current susceptibility for onward runs
+current_susceptibility <- calculate_current_susceptibility(
+  model_run = model_run
+)
+```
+
+Next, we want to set up our onward scenario projections. In this example we will be looking forward 10 years, with vaccination steadily decreasing, cases being introduced in year 7, and R0 remaining constant. To model this forward projection we use the function `prepare_future_data()` which will take our original parameters generated with data_load_process_wrapper() `params`, the current population susceptibility, generated with `current_susceptibility()`, and a data.frame of future events. This future events data.frame should have three columns
+
+1) **year** - The year of simulation.
+2) **relative_coverage** - The relative vaccination coverage compared to the final entry of `params$vaccination_coverage`. A value of 0.5 would indicate vaccination coverage is half of previously seen, and a value of 2.0 would indicate vaccination coverage is twice as high.
+3) **introduced_cases** - The number of cases to be introduced in that year. Introduced at the first timestep of the year and allocated to the unvaccinated compartment. Age is randomly selected based on a population weighting.
+4) **R0** - The absolute value of R0.
+
+```{r, eval = T}
+future_events <- data.frame(
+  year = 0:9,
+  relative_coverage = c(0.5, 0.5, 0.5, 0.25, 0.25, 0.25, 0, 0, 0, 0),
+  introduced_cases = c(0, 0, 0, 0, 0, 0, 0, 10, 0, 0),
+  R0 = rep(15, 10)
+)
+
+future_events
+```
+
+```{r, eval = F}
+
+#Model future cases
+params_future <- prepare_future_data(
+  params = params,
+  current_susceptibility = current_susceptibility,
+  future_events = future_events
+)
+
+```
+
+# 6. Onward projection and analysis
+
+Once parameterised for our onward projections, we can use the previously described `run_model_unpack_results()` and `summary_plots()` to run our model and produce summary plots using our new parameters.
+
+```{r, eval = F}
+#Future results
+run_future <- run_model_unpack_results(
+  params_future,
+  simulation_length = 10 * 365,
+  no_runs  = 5
+)
+
+#Generate plots
+future_plots <- summary_plots(
+  model_run = run_future,
+  params = params_future
+)
+```
 
 
 
