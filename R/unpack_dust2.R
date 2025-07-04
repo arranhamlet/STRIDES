@@ -74,6 +74,7 @@ unpack_dust2 <- function(model_system, model_object, dimension_names, which_stat
   # --- Clean types and state factor ---
   combined[, time := as.numeric(time)]
   combined[, value := as.numeric(value)]
+  if (!"run" %in% names(combined)) combined$run <- "run_1"
 
   all_states <- names(dust_state)
   combined[, state := factor(state, levels = all_states)]

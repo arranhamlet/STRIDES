@@ -155,24 +155,48 @@ demographic_check <- demographic_check(
 ```
 
 
-Once run, we can quickly visualise the model results using the function `summary_plots()` which will product two plots and a data.frame of the susceptibility of the population by age and year.
+## Visualising Model Outputs
+
+Once the model is run, we can quickly visualise the outputs using the function `summary_plots()`, which produces four plots and a data frame summarising susceptibility profiles over time and age.
 
 ```{r, eval = FALSE}
 plots <- summary_plots(
   model_run = model_run,
   params = params
 )
-
 ```
 
-The first plot will depict the six compartments of the model, the total population, and the cases.
+The function returns a named list containing:
 
-The second plot will show the susceptibility of the population at the final timepoint. This shows the proportion of each age group in one of five susceptibility labels.
+- `select_state_plot`: A faceted time-series plot showing the median and 95% uncertainty intervals for:
+  - Susceptible
+  - Exposed
+  - Infectious
+  - Infectious, severe
+  - Recovered
+  - Recovered with complications
+  - Total population
+  - Cases
 
-1) **Susceptible** - Those who have not been exposed to vaccination or infection.
-2) **Vaccine derived protection** - Those who have been exposed to vaccination but not infection.
-3) **Infection derived protection** - Those who have been exposed to infection but not vaccination.
-4) **Vaccine and infection derived protection** - Those who have been exposed to both infection and vaccination.
+- `susceptibility_plot`: A bar chart showing the susceptibility profile of the population at the most recent year, broken down by age group.
+
+- `vaccination_coverage_plot`: A line plot showing the proportion of the population with any vaccine-derived protection (including mixed) over time.
+
+- `cumulative_case_plot`: A cumulative incidence plot with uncertainty bands.
+
+- `susceptibility_data`: A weekly `data.table` in long format that shows the evolving proportion of the population in each susceptibility class.
+
+### Susceptibility Categories
+
+The population is assigned one of four labels based on vaccination and infection history:
+
+1. **Susceptible** – Never vaccinated and never infected.
+2. **Vaccine derived protection** – Vaccinated, but no infection history.
+3. **Infection derived protection** – Infected, but never vaccinated.
+4. **Vaccine and infection derived protection** – Both vaccinated and previously infected.
+
+These labels are calculated across time, age, vaccination status, and risk group, and aggregated into interpretable summaries annually and weekly.
+
 
 # 5. Calculate current susceptibility and prepare for onward projections.
 
@@ -185,31 +209,51 @@ current_susceptibility <- calculate_current_susceptibility(
 )
 ```
 
-Next, we want to set up our onward scenario projections. In this example we will be looking forward 10 years, with vaccination steadily decreasing, cases being introduced in year 7, and R0 remaining constant. To model this forward projection we use the function `prepare_future_data()` which will take our original parameters generated with data_load_process_wrapper() `params`, the current population susceptibility, generated with `current_susceptibility()`, and a data.frame of future events. This future events data.frame should have three columns
+Next, we want to set up our onward scenario projections. In this example we will be looking forward 10 years, with vaccination steadily decreasing, cases being introduced in year 7, and R0 remaining constant. To summarise our onwards scenario, we need to create a data.frame with four columns.
 
 1) **year** - The year of simulation.
 2) **relative_coverage** - The relative vaccination coverage compared to the final entry of `params$vaccination_coverage`. A value of 0.5 would indicate vaccination coverage is half of previously seen, and a value of 2.0 would indicate vaccination coverage is twice as high.
 3) **introduced_cases** - The number of cases to be introduced in that year. Introduced at the first timestep of the year and allocated to the unvaccinated compartment. Age is randomly selected based on a population weighting.
 4) **R0** - The absolute value of R0.
 
+Here we will create an example of when vaccination activities reduce over time, falling to 50%, then 25% and then to 0% vaccination coverage relative to our initial timepoint.
+
 ```{r, eval = T}
-future_events <- data.frame(
+vaccination_reduction <- data.frame(
   year = 0:9,
   relative_coverage = c(0.5, 0.5, 0.5, 0.25, 0.25, 0.25, 0, 0, 0, 0),
   introduced_cases = c(0, 0, 0, 0, 0, 0, 0, 10, 0, 0),
-  R0 = rep(15, 10)
+  R0 = 15
 )
 
-future_events
+vaccination_reduction
 ```
+
+We are also going to run a baseline example, where vaccination coverage is maintained (`relative_coverage = 1`) for comparison.
+
+```{r, eval = F}
+vaccination_maintenance <- data.frame(
+  year = 0:9,
+  relative_coverage = 1,
+  introduced_cases = c(0, 0, 0, 0, 0, 0, 0, 10, 0, 0),
+  R0 = 15
+)
+```
+
+To model this forward projection we use the function `prepare_future_data()` which will take our original parameters generated with data_load_process_wrapper() `params`, the current population susceptibility, generated with `current_susceptibility()`, and our data.frame objects of future events.
 
 ```{r, eval = F}
 
-#Model future cases
-params_future <- prepare_future_data(
+reduction_params <- prepare_future_data(
   params = params,
   current_susceptibility = current_susceptibility,
-  future_events = future_events
+  future_events = vaccination_reduction
+)
+
+maintenance_params <- prepare_future_data(
+  params = params,
+  current_susceptibility = current_susceptibility,
+  future_events = vaccination_maintenance
 )
 
 ```
@@ -219,32 +263,83 @@ params_future <- prepare_future_data(
 Once parameterised for our onward projections, we can use the previously described `run_model_unpack_results()` and `summary_plots()` to run our model and produce summary plots using our new parameters.
 
 ```{r, eval = F}
-#Future results
-run_future <- run_model_unpack_results(
-  params_future,
+run_reduction <- run_model_unpack_results(
+  reduction_params,
   simulation_length = 10 * 365,
   no_runs  = 5
 )
 
-#Generate plots
-future_plots <- summary_plots(
-  model_run = run_future,
-  params = params_future
+#Future results
+run_maintenance <- run_model_unpack_results(
+  maintenance_params,
+  simulation_length = 10 * 365,
+  no_runs  = 5
 )
 ```
 
+From here we can generate plots using `summary_plots()` which also contain information that we will use in a function `scenario_compare()` to compare the model runs. This function takes two arguments, `scenario_1` and `scenario_2` which are the outputs of `summary_plots()`.
 
+```{r, eval = F}
 
+#Generate plots
+reduction_plots <- summary_plots(
+  model_run = run_reduction,
+  params = reduction_params
+)
 
+maintenance_plots <- summary_plots(
+  model_run = run_maintenance,
+  params = maintenance_params
+)
 
+```
 
+## Comparing Transmission Scenarios
 
-# Conclusion
+To compare outputs across different intervention or transmission settings, we use the `scenario_compare()` function. This provides a unified summary of model dynamics and population susceptibility across two model scenarios.
 
-This basic walkthrough provides a streamlined introduction to the PREVAIL modeling workflow. From loading data to running simulations and plotting results, the package is designed to be:
+```{r, eval = FALSE}
+comparison <- scenario_compare(
+  scenario_1 = scenario_baseline,
+  scenario_2 = scenario_intervention
+)
+```
 
-- **Modular**: Each function can be called independently
-- **Customizable**: Accepts user-defined parameters or defaults
-- **Crisis-focused**: Tailored for age-, vaccine-, and risk-structured models in humanitarian settings
+### Function Outputs
 
-For more advanced use cases and customization, see the full function reference (`?data_load_process_wrapper`, etc.) or explore other vignettes.
+This function returns a named list with the following components:
+
+- `summary_plot`: A composite plot combining:
+  - A **weekly time-series** of median cases for both scenarios with uncertainty ribbons.
+  - A **cumulative case trajectory** plot showing the build-up of cases over time.
+  - A **susceptibility trajectory** over time, highlighting changes in the proportion of the population classified as susceptible.
+  - A **summary table** comparing scenario statistics (peak, total cases, and susceptibility increase).
+
+- `summary_table`: A formatted `gt` table that includes:
+  - **Peak median cases** and the **time of peak**.
+  - **Total cases** with uncertainty bounds.
+  - The **percentage increase in susceptible population** at the timepoint of maximum difference between scenarios.
+
+- `individual_plots`: A named list of individual `ggplot2` objects for further use, including:
+  - `case_plot`: Weekly incidence of median cases.
+  - `cumulative_plot`: Cumulative cases with uncertainty intervals.
+  - `susceptibility_plot`: Trajectory of susceptible population proportion over time.
+
+### Interpreting the Outputs
+
+This function is designed for side-by-side comparison of different scenario runs from the same model structure.
+
+The **case plots** illustrate both the scale and timing of outbreaks, allowing visual inspection of:
+- **Delays** in peak infection
+- **Reduction** in overall burden
+- **Shifts** in outbreak shape due to interventions
+
+The **susceptibility plot** shows the dynamics of the proportion of the population still at risk over time. This is particularly useful for evaluating how vaccination or prior immunity influence long-term vulnerability.
+
+The **summary table** allows easy extraction of numerical differences, including:
+- Differences in total and peak cases.
+- Time shifts in the epidemic peak.
+- Increase or reduction in susceptibility over time, useful for understanding potential rebound risks.
+
+> **Note:** Both scenarios must include the same structure of outputs — including `select_state_plot`, `susceptibility_data`, and `cumulative_case_plot`. Each scenario should be the result of a full call to `summary_plots()` or similar.
+

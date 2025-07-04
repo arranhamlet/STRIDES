@@ -10,18 +10,16 @@ scenario_compare(scenario_1, scenario_2)
 \item{scenario_1}{A named list of outputs from scenario 1, including:
 - `select_state_plot$data`: Time-series summary data (`data.table`)
 - `box_data`: Peak/total case data by `run`
+- `cumulative_case_plot$data`: Cumulative case trajectories
 - `susceptibility_data`: Long-format susceptibility proportions by time}
 
 \item{scenario_2}{Same structure as `scenario_1`, for the second scenario.}
 }
 \value{
-Invisibly returns a named list of plots and summary statistics:
-\item{case_plot}{Line and ribbon plot comparing median cases over time.}
-\item{cumulative_plot}{Cumulative case trajectories.}
-\item{boxplot_peak}{Boxplot comparing peak cases.}
-\item{boxplot_total}{Boxplot comparing total cases.}
-\item{susceptibility_plot}{Line plot comparing susceptible proportions over time.}
-\item{summary_table}{A `gt` object showing formatted peak/total case summaries.}
+A named list containing:
+\item{summary_plot}{A combined patchwork plot of all summary graphics.}
+\item{summary_table}{A formatted `gt` table of case summary statistics.}
+\item{individual_plots}{A list of individual `ggplot2` plots for further use.}
 }
 \description{
 This function compares two transmission scenarios by:

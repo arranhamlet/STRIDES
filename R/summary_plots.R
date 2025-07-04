@@ -82,8 +82,8 @@ summary_plots <- function(model_run, params) {
     ggplot2::theme_bw()
 
   # --- Weekly state summaries for plotting ---
-  summary_plot_data <- model_run_plot[time %% 7L == 1L] |>
-    collapse::fgroup_by(time, state_plot) |>
+  summary_plot_data <- model_run_plot[time %% 7L == 1L] %>%
+    collapse::fgroup_by(time, state_plot) %>%
     collapse::fsummarise(
       median = collapse::fquantile(value, 0.5),
       lower  = collapse::fquantile(value, 0.025),
@@ -176,11 +176,11 @@ summary_plots <- function(model_run, params) {
                              grepl("Vaccine", status) ~ "Vaccinated",
                              TRUE ~ "Unvaccinated"
                            )
-  ) |>
-    collapse::fgroup_by(year, status_simple) |>
-    collapse::fsummarise(value = collapse::fsum(value)) |>
-    dplyr::group_by(year) |>
-    dplyr::mutate(prop = value / sum(value)) |>
+  ) %>%
+    collapse::fgroup_by(year, status_simple) %>%
+    collapse::fsummarise(value = collapse::fsum(value)) %>%
+    dplyr::group_by(year) %>%
+    dplyr::mutate(prop = value / sum(value)) %>%
     dplyr::filter(status_simple == "Vaccinated")
 
   vaccination_coverage_plot <- ggplot2::ggplot(
@@ -194,21 +194,12 @@ summary_plots <- function(model_run, params) {
     ggplot2::coord_cartesian(ylim = c(0, 1)) +
     ggplot2::theme_bw()
 
-  # --- Boxplot data per run ---
-  box_data <- model_run_plot[state == "new_case"] |>
-    collapse::fgroup_by(run) |>
-    collapse::fsummarise(
-      peak_cases = max(value, na.rm = TRUE),
-      total_cases = collapse::fsum(value)
-    )
-
   # --- Return structured output ---
   list(
     select_state_plot = select_state_plot,
     susceptibility_plot = susceptibility_plot,
     vaccination_coverage_plot = vaccination_coverage_plot,
     cumulative_case_plot = cumulative_case_plot,
-    susceptibility_data = detailed_susceptibility,
-    box_data = box_data
+    susceptibility_data = detailed_susceptibility
   )
 }
