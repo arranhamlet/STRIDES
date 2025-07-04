@@ -95,8 +95,8 @@ scenario_compare <- function(scenario_1, scenario_2) {
   case_summary_full[, susceptible_pct_increase := c(sprintf("%.1f%%", max_susc_1 * 100), sprintf("%.1f%%", max_susc_2 * 100), sprintf("%.1f%%", percent_increase_susc))]
 
   # --- Format summary statistics as a gt table ---
-  case_summary_format <- gt::gt(case_summary_full) |>
-    gt::fmt_number(columns = where(is.numeric), decimals = 0, use_seps = TRUE) |>
+  case_summary_format <- gt::gt(case_summary_full) %>%
+    gt::fmt_number(columns = where(is.numeric), decimals = 0, use_seps = TRUE) %>%
     gt::cols_label(
       type                       = "Scenario",
       peak_median_cases          = "Peak Median",
@@ -105,13 +105,13 @@ scenario_compare <- function(scenario_1, scenario_2) {
       total_lower_cases          = "Total Lower",
       total_upper_cases          = "Total Upper",
       susceptible_pct_increase   = "Susceptible % Increase"
-    ) |>
-    gt::tab_options(data_row.padding = gt::px(3)) |>
+    ) %>%
+    gt::tab_options(data_row.padding = gt::px(3)) %>%
     gt::tab_style(
       style = gt::cell_text(weight = "bold"),
       locations = gt::cells_column_labels(gt::everything())
-    ) |>
-    gt::opt_table_font(font = "sans") |>
+    ) %>%
+    gt::opt_table_font(font = "sans") %>%
     gt::opt_row_striping()
 
   # --- Combine cumulative trajectories ---

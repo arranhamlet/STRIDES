@@ -76,15 +76,20 @@ demographic_check <- function(reference_population,
   # -------------------------
   # Plot: population over time
   # -------------------------
+
+  #Common color legend for merging later
+  g <- guides(fill = guide_legend(override.aes = list(color = scales::hue_pal()(2))))
+
   population_plot <- ggplot2::ggplot(
     data = population_comparison,
-    mapping = ggplot2::aes(x = year, y = value, group = label, color = label)
+    mapping = ggplot2::aes(x = year, y = value, group = label, color = label, fill = label)
   ) +
     ggplot2::geom_line(linewidth = 1, show.legend = TRUE) +
     ggplot2::theme_bw() +
-    ggplot2::labs(x = "Year", y = "Population", color = "") +
+    ggplot2::labs(x = "Year", y = "Population", color = "", fill = "") +
     ggplot2::scale_y_continuous(labels = scales::comma) +
-    ggplot2::scale_x_continuous(breaks = scales::breaks_pretty())
+    ggplot2::scale_x_continuous(breaks = scales::breaks_pretty()) +
+    g
 
   # -------------------------
   # Final year age breakdown
@@ -114,17 +119,23 @@ demographic_check <- function(reference_population,
   # -------------------------
   age_breakdown_plot <- ggplot2::ggplot(
     data = final_age,
-    mapping = ggplot2::aes(x = age_group, y = prop * 100, fill = label)
+    mapping = ggplot2::aes(x = age_group, y = prop * 100, color = label, fill = label)
   ) +
     ggplot2::geom_col(position = ggplot2::position_dodge(), linewidth = 1, show.legend = TRUE) +
     ggplot2::theme_bw() +
-    ggplot2::labs(x = "Age group", y = "Percent of population", fill = "") +
-    ggplot2::scale_y_continuous(labels = scales::comma)
+    ggplot2::labs(x = "Age group", y = "Percent of population", fill = "", color = "") +
+    ggplot2::scale_y_continuous(labels = scales::comma) +
+    ggplot2::theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    g
+
+  #Combined plot
+  combined_plot <- (demographic_plots$population_plot + theme(legend.position = "none"))/( demographic_plots$age_breakdown_plot + theme(legend.position = "bottom"))
 
   # -------------------------
   # Return plots
   # -------------------------
   list(
+    combined_plot = combined_plot,
     population_plot = population_plot,
     age_breakdown_plot = age_breakdown_plot
   )
