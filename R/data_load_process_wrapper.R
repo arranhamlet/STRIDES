@@ -159,7 +159,7 @@ data_load_process_wrapper <- function(
     seed_data <- base::data.frame(
       dim1 = 1, dim2 = 1, dim3 = 1,
       dim4 = seq_along(times$seed),
-      value = 1
+      value = 10
     )
   }
 

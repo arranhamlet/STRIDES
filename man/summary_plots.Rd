@@ -2,21 +2,33 @@
 % Please edit documentation in R/summary_plots.R
 \name{summary_plots}
 \alias{summary_plots}
-\title{Generate Summary Plots and Susceptibility Profiles (Optimized)}
+\title{Generate Summary Plots and Susceptibility Profiles}
 \usage{
 summary_plots(model_run, params)
 }
 \arguments{
-\item{model_run}{A `data.frame` or `data.table` in long format, including columns `time`, `state`, `value`, `age`, `risk`, and `vaccination`.}
+\item{model_run}{A `data.frame` or `data.table` in long format, including columns
+`time`, `state`, `value`, `age`, `risk`, `vaccination`, and `run`.}
 
-\item{params}{A named list of model input parameters.}
+\item{params}{A named list of model input parameters, including:
+- `input_data$year_start`: Start year of the simulation ("" uses 1950).
+- `input_data$age_breaks`: Age breakpoints as a semicolon-separated string.}
 }
 \value{
-A named list of ggplot objects and summary data.
+A named list containing:
+\item{select_state_plot}{A ggplot2 object: time-series of key model states.}
+\item{susceptibility_plot}{A ggplot2 object: latest age-specific susceptibility profile.}
+\item{vaccination_coverage_plot}{A ggplot2 object: vaccination coverage over time.}
+\item{cumulative_case_plot}{A ggplot2 object: cumulative case trajectory with uncertainty.}
+\item{susceptibility_data}{A `data.table`: weekly susceptibility proportions.}
+\item{box_data}{A `data.table`: peak and total cases per run.}
 }
 \description{
-Processes model output and generates:
+This function processes model output and generates:
 1. A time-series plot of selected states (weekly only).
 2. A stacked bar chart of age-specific susceptibility profiles (annual only).
-3. A long-format data.table with stratified susceptibility proportions.
+3. A line chart of vaccination coverage over time.
+4. A long-format `data.table` with stratified susceptibility proportions.
+5. A cumulative case time-series plot.
+6. A summary `box_data` table with peak and total case statistics per run.
 }
